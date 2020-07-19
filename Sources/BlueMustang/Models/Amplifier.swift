@@ -10,16 +10,20 @@ import CoreBluetooth
 
 public class Amplifier {
     
-    var vendor: Int?
-    var product: Int?
-    var name: String?
-    var manufacturer: String?
-    var presets: [Preset]?
+    public var vendor: Int?
+    public var product: Int?
+    public var name: String?
+    public var manufacturer: String?
+    public var presets: [Preset]?
     internal var peripheral: CBPeripheral
-    internal let advertisedName: String?
-    internal let rssi: String?
-    internal var state: String { return peripheral.state.stringRepresentation }
-    internal var uuid: String { return peripheral.identifier.uuidString }
+    public let advertisedName: String?
+    public let rssi: String?
+    public var state: String { return peripheral.state.stringRepresentation }
+    public var uuid: String { return peripheral.identifier.uuidString }
+
+    public var debugDescription: String {
+        return String(format: "Amplifier. Name: %@, rssi: %@, state: %@", advertisedName ?? "Unknown", rssi ?? "Unknown", state )
+    }
 
     init(peripheral: CBPeripheral) {
         self.peripheral = peripheral
@@ -33,4 +37,5 @@ public class Amplifier {
         self.peripheral = peripheral
         self.rssi = String(format: "%d", rssi)
     }
+    
 }

@@ -39,10 +39,13 @@ public class BlueMustang {
     public func connect(_ amplifier: Amplifier) {
         scanner?.connect(amplifier,
                          onConnect: { amplifier in
-                            ULog.debug("Amplifier connected")
+                            ULog.verbose("Amplifier connected")
                          },
                          onServices: { amplifier in
-                            ULog.debug("Found Services")
+                            ULog.verbose("Found Services")
+                         },
+                         onCharacteristics: { amplifier in
+                            ULog.verbose("Found Characteristics")
                             self.delegate?.blueMustang(self, didConnectAmplifier: amplifier)
         })
     }
@@ -53,4 +56,15 @@ public class BlueMustang {
         }
     }
 
+    public func amplifier(_ amplifier: Amplifier, getPreset slot: Int, onDidGetPreset didGetPreset: @escaping (Preset) -> Void) {
+        scanner?.amplifier(amplifier, getPreset: UInt8(truncatingIfNeeded: slot)) { preset in
+            didGetPreset(preset)
+        }
+    }
+    
+    public func amplifier(_ amplifier: Amplifier, setPreset slot: Int, onDidGetPreset didGetPreset: @escaping (Preset) -> Void) {
+        scanner?.amplifier(amplifier, setPreset: UInt8(truncatingIfNeeded: slot)) { preset in
+            didGetPreset(preset)
+        }
+    }
 }
