@@ -83,7 +83,7 @@ public struct Preset {
             text += String(format: "   %@: %@ - %@ (colour %d)\n", effect.type.rawValue, effect.name ?? "-empty-", effect.enabled ? "ON" : "OFF", effect.colour)
             text += String(format: "    Knobs: %d - ", effect.knobs.count)
             effect.knobs.forEach { text += String(format: "%0.2f ", $0.value) }
-            text += String(format: "slot %d (%d %d %d)\n", effect.slot, effect.aValue1, effect.aValue2, effect.aValue3)
+            text += String(format: "slot %d (%d %d %d)\n", effect.slot, effect.aValue1 ?? 0, effect.aValue2 ?? 0, effect.aValue3 ?? 0)
         }
         return text
     }

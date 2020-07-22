@@ -136,7 +136,24 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                     preset.cabinetName = preset.cabinetName(preset.cabinet)
                     preset.model = Int(value[16])
                     preset.modelName = preset.modelName(preset.model)
-                    preset.name = String(data: value.advanced(by: 17), encoding: .utf8)
+                    let nameLength = Int(value[17])
+                    preset.name = String(data: value[18..<18+nameLength], encoding: .utf8)
+                    let effectCount = Int(value[18 + nameLength])
+                    let effects = 19 + nameLength
+                    preset.effects = [Effect]()
+                    for index in 0 ..< effectCount {
+                        let effectPosition = effects + (index * 11)
+                        let module = (UInt16(value[effectPosition+2])<<8) | UInt16(value[effectPosition+3])
+                        var knobs = [Knob]()
+                        knobs.append(Knob(value: Float(value[effectPosition+5]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+6]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+7]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+8]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+9]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+10]) / 255.0))
+                        let effect = Effect(slot: Int(value[effectPosition]), type: value[effectPosition+1], module: module, enabled: value[effectPosition+4] == 0x01, knobs: knobs)
+                        preset.effects?.append(effect)
+                    }
                 }
                 break
             case self.AMPLIFIER_PRESET_NAME_CHRC_UUID:
@@ -266,7 +283,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         service.characteristics?.forEach { ( characteristic) in
             peripheral.readValue(for: characteristic)
         }
-        onAmplifierCharacteristicsDiscovered?(peripheral.asAmplifier())
+        onAmplifierCharacteristicsDiscovered?(peripheral.asAmplifier()) // Note this will happen before the readValue calls have completed
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {

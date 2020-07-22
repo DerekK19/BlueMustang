@@ -9,7 +9,11 @@ import Foundation
 
 public struct Knob {
 
-    var name: String
-    var value: Float
+    public var name: String? = nil
+    public var value: Float
 
+    public init(value: Float, name: String? = nil) {
+        self.value = value
+    }
+    
 }
