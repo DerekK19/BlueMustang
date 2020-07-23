@@ -31,11 +31,10 @@ internal class ULog {
         let f = format.withUTF8Buffer { String(decoding: $0, as: UTF8.self) }
         let s = String.init(format: f, arguments: args)
         os_log(stringFormat, log: .uLogger, type: .default, s)
-        #if os(iOS)
+        #if os(iOS) || os(OSX)
             #if USE_FLOGGER
                 Flogger.log.debug(s)
             #endif
-        #elseif os(watchOS)
         #else
             NSLog(s)
         #endif
@@ -45,11 +44,10 @@ internal class ULog {
         let f = format.withUTF8Buffer { String(decoding: $0, as: UTF8.self) }
         let s = String.init(format: f, arguments: args)
         os_log(stringFormat, log: .uLogger, type: .error, s)
-        #if os(iOS)
+        #if os(iOS) || os(OSX)
             #if USE_FLOGGER
                 Flogger.log.error(s)
             #endif
-        #elseif os(watchOS)
         #else
             NSLog(s)
         #endif
@@ -59,11 +57,10 @@ internal class ULog {
         let f = format.withUTF8Buffer { String(decoding: $0, as: UTF8.self) }
         let s = String.init(format: f, arguments: args)
         os_log(stringFormat, log: .uLogger, type: .info, s)
-        #if os(iOS)
+        #if os(iOS) || os(OSX)
             #if USE_FLOGGER
-            Flogger.log.info(s)
+                Flogger.log.info(s)
             #endif
-        #elseif os(watchOS)
         #else
             NSLog(s)
         #endif
@@ -75,13 +72,14 @@ internal class ULog {
         #if VERBOSE
             os_log(stringFormat, log: .uLogger, type: .debug, s)
         #endif
-        #if os(iOS)
+        #if os(iOS) || os(OSX)
             #if USE_FLOGGER
                 Flogger.log.verbose(s)
             #endif
-        #elseif os(watchOS)
         #else
-            NSLog(s)
+            #if VERBOSE
+                NSLog(s)
+            #endif
         #endif
     }
 }
