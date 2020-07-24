@@ -29,6 +29,13 @@ extension CBPeripheral {
     }
 }
 
+internal extension Notification.Name {
+    static let readyToScan = Notification.Name("BlueMustang.readyToScan")
+    static let amplifierNameDiscovered = Notification.Name("BlueMustang.amplifierNameDiscovered")
+    static let presetCountDiscovered = Notification.Name("BlueMustang.presetCountDiscovered")
+    static let presetDiscovered = Notification.Name("BlueMustang.presetDiscovered")
+}
+
 class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     
@@ -37,37 +44,18 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     private let AMPLIFIER_NAME_CHRC_UUID: CBUUID          = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130001")
     private let AMPLIFIER_PRESET_COUNT_CHRC_UUID: CBUUID  = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130002")
     private let AMPLIFIER_PRESET_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130003")
-    private let AMPLIFIER_PRESET_NAME_CHRC_UUID : CBUUID  = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
-    private let AMPLIFIER_VOLUME_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130005")
-    private let AMPLIFIER_MASTER_VOLUME_CHRC_UUID: CBUUID = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130006")
-    private let AMPLIFIER_GAIN1_CHRC_UUID : CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130007")
-    private let AMPLIFIER_GAIN2_CHRC_UUID: CBUUID         = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130008")
-    private let AMPLIFIER_TREBLE_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130009")
-    private let AMPLIFIER_MIDDLE_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac13000a")
-    private let AMPLIFIER_BASS_CHRC_UUID: CBUUID          = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac13000b")
-    private let AMPLIFIER_PRESENCE_CHRC_UUID: CBUUID      = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac13000c")
-    private let AMPLIFIER_DEPTH_CHRC_UUID: CBUUID         = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac13000d")
-    private let AMPLIFIER_BIAS_CHRC_UUID: CBUUID          = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac13000e")
-    private let AMPLIFIER_NOISE_GATE_CHRC_UUID: CBUUID    = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac13000f")
-    private let AMPLIFIER_THRESHOLD_CHRC_UUID: CBUUID     = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130010")
-    private let AMPLIFIER_SAG_CHRC_UUID: CBUUID           = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130011")
-    private let AMPLIFIER_BRIGHTNESS_CHRC_UUID: CBUUID    = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130012")
-    private let AMPLIFIER_CABINET_CHRC_UUID: CBUUID       = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130013")
-    private let AMPLIFIER_MODEL_CHRC_UUID: CBUUID         = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130014")
+    private let AMPLIFIER_DATA_READY_CHRC_UUID : CBUUID   = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
     
     private var centralManager: CBCentralManager!
     private var serviceDiscoveryInProgress = false
 
-    private var onScannerReady: ((BluetoothScanner) -> Void)?
     private var onAmplifierDiscovered: ((Amplifier) -> Void)?
     private var onAmplifierServicesDiscovered: ((Amplifier) -> Void)?
     private var onAmplifierCharacteristicsDiscovered: ((Amplifier) -> Void)?
-    private var onAmplifierCharacteristicDiscovered: ((CBCharacteristic) -> Void)?
     private var onAmplifierConnected: ((Amplifier) -> Void)?
     private var onAmplifierDisconnected: ((Amplifier) -> Void)?
 
-    public init(onScannerReady: @escaping (BluetoothScanner) -> Void) {
-        self.onScannerReady = onScannerReady
+    public override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
     }
@@ -85,116 +73,88 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         centralManager.connect(amplifier.peripheral, options: nil)
     }
     
-    internal func amplifier(_ amplifier: Amplifier, getPreset slot: UInt8, _ didGetPreset: @escaping (Preset) -> Void) {
+    internal func amplifier(_ amplifier: Amplifier, getPreset slot: UInt8) {
         var data = Data(repeating: 0, count: 1)
         data[0] = slot
-        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID,
-                          value: data,
-                          forAmplifier: amplifier) {
-                            self.getCharacteristics([self.AMPLIFIER_PRESET_CHRC_UUID],
-                                                    forAmplifier: amplifier) { preset in
-                                                        didGetPreset(preset)
-                            }
-        }
+        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
     }
     
-    internal func amplifier(_ amplifier: Amplifier, setPreset slot: UInt8, _ didSetPreset: @escaping (Preset) -> Void) {
+    internal func amplifier(_ amplifier: Amplifier, setPreset slot: UInt8) {
         var data = Data(repeating: 0, count: 1)
         data[0] = slot
-        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID,
-                          value: data,
-                          forAmplifier: amplifier) {
-                           self.getCharacteristics([self.AMPLIFIER_PRESET_CHRC_UUID],
-                                                   forAmplifier: amplifier) { preset in
-                                                       didSetPreset(preset)
-                           }
-        }
+        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
     }
     
-    open func getCharacteristics(_ uuids: [CBUUID], forAmplifier amplifier: Amplifier, _ onDiscover: @escaping (Preset) -> Void) {
-        onAmplifierCharacteristicDiscovered = { characteristic in
-            var preset = Preset()
-            switch characteristic.uuid {
-            case self.AMPLIFIER_PRESET_CHRC_UUID:
-                if let value = characteristic.value {
-                    preset.slot = Int(value[0])
-                    preset.volume = Float(value[1]) / 255.0
-                    preset.masterVolume = Float(value[2]) / 255.0
-                    preset.gain1 = Float(value[3]) / 255.0
-                    preset.gain2 = Float(value[4]) / 255.0
-                    preset.treble = Float(value[5]) / 255.0
-                    preset.middle = Float(value[6]) / 255.0
-                    preset.bass = Float(value[7]) / 255.0
-                    preset.presence = Float(value[8]) / 255.0
-                    preset.depth = Int(value[9])
-                    preset.bias = Int(value[10])
-                    preset.noiseGate = Int(value[11])
-                    preset.threshold = Int(value[12])
-                    preset.sag = Int(value[13])
-                    preset.brightness = Int(value[14])
-                    preset.cabinet = Int(value[15])
-                    preset.cabinetName = preset.cabinetName(preset.cabinet)
-                    preset.model = Int(value[16])
-                    preset.modelName = preset.modelName(preset.model)
-                    let nameLength = Int(value[17])
-                    preset.name = String(data: value[18..<18+nameLength], encoding: .utf8)
-                    let effectCount = Int(value[18 + nameLength])
-                    let effects = 19 + nameLength
-                    preset.effects = [Effect]()
-                    for index in 0 ..< effectCount {
-                        let effectPosition = effects + (index * 11)
-                        let module = (UInt16(value[effectPosition+2])<<8) | UInt16(value[effectPosition+3])
-                        var knobs = [Knob]()
-                        knobs.append(Knob(value: Float(value[effectPosition+5]) / 255.0))
-                        knobs.append(Knob(value: Float(value[effectPosition+6]) / 255.0))
-                        knobs.append(Knob(value: Float(value[effectPosition+7]) / 255.0))
-                        knobs.append(Knob(value: Float(value[effectPosition+8]) / 255.0))
-                        knobs.append(Knob(value: Float(value[effectPosition+9]) / 255.0))
-                        knobs.append(Knob(value: Float(value[effectPosition+10]) / 255.0))
-                        let effect = Effect(slot: Int(value[effectPosition]), type: value[effectPosition+1], module: module, enabled: value[effectPosition+4] == 0x01, knobs: knobs)
-                        preset.effects?.append(effect)
-                    }
-                }
-                break
-            case self.AMPLIFIER_PRESET_NAME_CHRC_UUID:
-                break // preset.name = String(data: characteristic.value, encoding: .utf8)
-            case self.AMPLIFIER_VOLUME_CHRC_UUID:
-                break
-            case self.AMPLIFIER_MASTER_VOLUME_CHRC_UUID:
-                break
-            case self.AMPLIFIER_GAIN1_CHRC_UUID:
-                break
-            case self.AMPLIFIER_GAIN2_CHRC_UUID:
-                break
-            case self.AMPLIFIER_TREBLE_CHRC_UUID:
-                break
-            case self.AMPLIFIER_MIDDLE_CHRC_UUID:
-                break
-            case self.AMPLIFIER_BASS_CHRC_UUID:
-                break
-            case self.AMPLIFIER_PRESENCE_CHRC_UUID:
-                break
-            case self.AMPLIFIER_DEPTH_CHRC_UUID:
-                break
-            case self.AMPLIFIER_BIAS_CHRC_UUID:
-                break
-            case self.AMPLIFIER_NOISE_GATE_CHRC_UUID:
-                break
-            case self.AMPLIFIER_THRESHOLD_CHRC_UUID:
-                break
-            case self.AMPLIFIER_SAG_CHRC_UUID:
-                break
-            case self.AMPLIFIER_BRIGHTNESS_CHRC_UUID:
-                break
-            case self.AMPLIFIER_CABINET_CHRC_UUID:
-                break
-            case self.AMPLIFIER_MODEL_CHRC_UUID:
-                break
-            default:
-                    ULog.error("Unexpected characteristic %@", characteristic.uuid.uuidString)
+    private func onAmplifierCharacteristicDiscovered(_ characteristic: CBCharacteristic) {
+        var preset = Preset()
+        switch characteristic.uuid {
+        case self.AMPLIFIER_NAME_CHRC_UUID:
+            if let value = characteristic.value {
+                let name = String(data: value, encoding: .utf8) ?? "Not known"
+                ULog.debug("Amplifier name: %@", name)
+                NotificationCenter.default.post(name: .amplifierNameDiscovered, object: name)
             }
-            onDiscover(preset)
+            
+        case self.AMPLIFIER_PRESET_COUNT_CHRC_UUID:
+            if let value = characteristic.value {
+                let count = Int(value[0])
+                ULog.debug("Preset count is %d", count)
+                NotificationCenter.default.post(name: .presetCountDiscovered, object: count)
+            }
+            
+        case self.AMPLIFIER_PRESET_CHRC_UUID:
+            if let value = characteristic.value {
+                preset.slot = Int(value[0])
+                preset.volume = Float(value[1]) / 255.0
+                preset.masterVolume = Float(value[2]) / 255.0
+                preset.gain1 = Float(value[3]) / 255.0
+                preset.gain2 = Float(value[4]) / 255.0
+                preset.treble = Float(value[5]) / 255.0
+                preset.middle = Float(value[6]) / 255.0
+                preset.bass = Float(value[7]) / 255.0
+                preset.presence = Float(value[8]) / 255.0
+                preset.depth = Int(value[9])
+                preset.bias = Int(value[10])
+                preset.noiseGate = Int(value[11])
+                preset.threshold = Int(value[12])
+                preset.sag = Int(value[13])
+                preset.brightness = Int(value[14])
+                preset.cabinet = Int(value[15])
+                preset.cabinetName = preset.cabinetName(preset.cabinet)
+                preset.model = Int(value[16])
+                preset.modelName = preset.modelName(preset.model)
+                let nameLength = Int(value[17])
+                preset.name = String(data: value[18..<18+nameLength], encoding: .utf8)
+                let effectCount = Int(value[18 + nameLength])
+                let effects = 19 + nameLength
+                preset.effects = [Effect]()
+                for index in 0 ..< effectCount {
+                    let effectPosition = effects + (index * 11)
+                    let module = (UInt16(value[effectPosition+2])<<8) | UInt16(value[effectPosition+3])
+                    var knobs = [Knob]()
+                    knobs.append(Knob(value: Float(value[effectPosition+5]) / 255.0))
+                    knobs.append(Knob(value: Float(value[effectPosition+6]) / 255.0))
+                    knobs.append(Knob(value: Float(value[effectPosition+7]) / 255.0))
+                    knobs.append(Knob(value: Float(value[effectPosition+8]) / 255.0))
+                    knobs.append(Knob(value: Float(value[effectPosition+9]) / 255.0))
+                    knobs.append(Knob(value: Float(value[effectPosition+10]) / 255.0))
+                    let effect = Effect(slot: Int(value[effectPosition]), type: value[effectPosition+1], module: module, enabled: value[effectPosition+4] == 0x01, knobs: knobs)
+                    preset.effects?.append(effect)
+                }
+            }
+            NotificationCenter.default.post(name: .presetDiscovered, object: preset)
+
+        case self.AMPLIFIER_DATA_READY_CHRC_UUID:
+            if let value = characteristic.value {
+                let slot = Int(value[0])
+                ULog.debug("Current preset changed to %d", slot)
+            }
+        default:
+                ULog.error("Unexpected characteristic %@", characteristic.uuid.uuidString)
         }
+    }
+    
+    open func getCharacteristics(_ uuids: [CBUUID], forAmplifier amplifier: Amplifier) {
         guard let services = amplifier.peripheral.services else { return }
         services.forEach { (service) in
             for characteristic in service.characteristics ?? [] {
@@ -206,13 +166,12 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         }
     }
     
-    open func setCharacteristic(_ uuid: CBUUID, value: Data, forAmplifier amplifier: Amplifier, _ onComplete: @escaping () -> Void) {
+    open func setCharacteristic(_ uuid: CBUUID, value: Data, forAmplifier amplifier: Amplifier) {
         guard let services = amplifier.peripheral.services else { return }
         services.forEach { (service) in
             for characteristic in service.characteristics ?? [] {
                 if characteristic.uuid == uuid {
                     amplifier.peripheral.writeValue(value, for: characteristic, type: .withoutResponse)
-                    onComplete()
                     return
                 }
             }
@@ -229,9 +188,9 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            onScannerReady?(self)
-            onScannerReady = nil
+            NotificationCenter.default.post(name: .readyToScan, object: true)
         case .poweredOff:
+            NotificationCenter.default.post(name: .readyToScan, object: false)
             central.stopScan()
         case .unsupported: fatalError("Unsupported BLE module")
         default: break
@@ -262,6 +221,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if error != nil {
             ULog.error("peripheral didDiscoverServices error: %@", error?.localizedDescription ?? "Unknown")
+            return
         }
         ULog.verbose("Peripheral has %d services", peripheral.services?.count ?? -1)
         onAmplifierServicesDiscovered?(peripheral.asAmplifier())
@@ -277,18 +237,21 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if error != nil {
-            ULog.error("peripheral didDiscoverCharacteristicsFor service error: %@", service, error?.localizedDescription ?? "Unknown")
+            ULog.error("peripheral didDiscoverCharacteristicsFor service %@. error: %@", service.uuid.uuidString, error?.localizedDescription ?? "Unknown")
+            return
         }
         ULog.verbose("Service %@ has %d characteristics", service.uuid, service.characteristics?.count ?? -1)
         service.characteristics?.forEach { ( characteristic) in
             peripheral.readValue(for: characteristic)
+            peripheral.setNotifyValue(true, for: characteristic)
         }
         onAmplifierCharacteristicsDiscovered?(peripheral.asAmplifier()) // Note this will happen before the readValue calls have completed
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
         if error != nil {
-            ULog.error("peripheral didDiscoverDescriptorsFor service %@ error: %@", characteristic, error?.localizedDescription ?? "Unknown")
+            ULog.error("peripheral didDiscoverDescriptorsFor service %@. error: %@", characteristic.uuid.uuidString, error?.localizedDescription ?? "Unknown")
+            return
         }
         ULog.verbose("Characteristic %@ has %d descriptors", characteristic.uuid, characteristic.descriptors?.count ?? -1)
         characteristic.descriptors?.forEach { descriptor in
@@ -297,6 +260,10 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didUpdateValueFor characteristic %@. error: %@", characteristic.uuid.uuidString, error?.localizedDescription ?? "Unknown")
+            return
+        }
         if let value = characteristic.value {
             if value.count == 0 {
                 ULog.verbose("Characteristic value: []")
@@ -306,10 +273,14 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         } else {
             ULog.verbose("Characteristic value: nil")
         }
-        onAmplifierCharacteristicDiscovered?(characteristic)
+        onAmplifierCharacteristicDiscovered(characteristic)
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor descriptor: CBDescriptor, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didUpdateValueFor descriptor %@. error: %@", descriptor.uuid.uuidString, error?.localizedDescription ?? "Unknown")
+            return
+        }
         if let value = descriptor.value {
             if value is String {
                 ULog.debug("Descriptor: %@", value as! String)
@@ -349,5 +320,13 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             }
         }.joined(separator: ". ")
         ULog.debug("%@ - %@: %@", descriptor.characteristic.uuid, descs, char_value)
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didUpdateNotificationStateFor characteristic %@: error: %@", characteristic.uuid.uuidString, error?.localizedDescription ?? "Unknown")
+            return
+        }
+        ULog.verbose("Characteristic %@ %@ notify", characteristic.uuid, characteristic.isNotifying ? "will" : "will not")
     }
 }
