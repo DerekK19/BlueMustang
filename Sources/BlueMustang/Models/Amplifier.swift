@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Amplifier.swift
 //  
 //
 //  Created by Derek Knight on 19/07/20.

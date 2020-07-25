@@ -34,6 +34,16 @@ internal extension Notification.Name {
     static let amplifierNameDiscovered = Notification.Name("BlueMustang.amplifierNameDiscovered")
     static let presetCountDiscovered = Notification.Name("BlueMustang.presetCountDiscovered")
     static let presetDiscovered = Notification.Name("BlueMustang.presetDiscovered")
+    static let presetSet = Notification.Name("BlueMustang.presetSet")
+    static let presetSetConfirmed = Notification.Name("BlueMustang.presetSetConfirmed")
+    static let presetSaved = Notification.Name("BlueMustang.presetSaved")
+    static let presetSaveConfirmed = Notification.Name("BlueMustang.presetSaveConfirmed")
+    static let volumeChanged = Notification.Name("BlueMustang.volumeChanged")
+    static let gainChanged = Notification.Name("BlueMustang.gainChanged")
+    static let trebleChanged = Notification.Name("BlueMustang.trebleChanged")
+    static let middleChanged = Notification.Name("BlueMustang.middleChanged")
+    static let bassChanged = Notification.Name("BlueMustang.bassChanged")
+    static let reverbChanged = Notification.Name("BlueMustang.reverbChanged")
 }
 
 class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
@@ -44,8 +54,8 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     private let AMPLIFIER_NAME_CHRC_UUID: CBUUID          = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130001")
     private let AMPLIFIER_PRESET_COUNT_CHRC_UUID: CBUUID  = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130002")
     private let AMPLIFIER_PRESET_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130003")
-    private let AMPLIFIER_DATA_READY_CHRC_UUID : CBUUID   = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
-    
+    private let AMPLIFIER_CONTROL_CHRC_UUID : CBUUID      = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
+
     private var centralManager: CBCentralManager!
     private var serviceDiscoveryInProgress = false
 
@@ -74,14 +84,81 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
     
     internal func amplifier(_ amplifier: Amplifier, getPreset slot: UInt8) {
-        var data = Data(repeating: 0, count: 1)
-        data[0] = slot
+        var data = Data(repeating: 0, count: 2)
+        data[0] = 0x00 // Choose preset in the supplied slot
+        data[1] = slot
         setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
     }
     
-    internal func amplifier(_ amplifier: Amplifier, setPreset slot: UInt8) {
+    internal func amplifier(_ amplifier: Amplifier, setPreset preset: Preset) {
+        let name = Data((preset.name ?? "").utf8)
+        var data = Data(repeating: 0, count: 20 + name.count + ((preset.effects?.count ?? 0) * 11))
+        data[0] = 0x01 // Change the settings for the current preset
+        data[1] = UInt8(truncatingIfNeeded: preset.slot ?? 0)
+        data[2] = UInt8(truncatingIfNeeded: Int((preset.volume ?? 0.0) * 255))
+        data[3] = UInt8(truncatingIfNeeded: Int((preset.masterVolume ?? 0.0) * 255))
+        data[4] = UInt8(truncatingIfNeeded: Int((preset.gain1 ?? 0.0) * 255))
+        data[5] = UInt8(truncatingIfNeeded: Int((preset.gain2 ?? 0.0) * 255))
+        data[6] = UInt8(truncatingIfNeeded: Int((preset.treble ?? 0.0) * 255))
+        data[7] = UInt8(truncatingIfNeeded: Int((preset.middle ?? 0.0) * 255))
+        data[8] = UInt8(truncatingIfNeeded: Int((preset.bass ?? 0.0) * 255))
+        data[9] = UInt8(truncatingIfNeeded: Int((preset.presence ?? 0.0) * 255))
+        data[10] = UInt8(truncatingIfNeeded: preset.depth ?? 0)
+        data[11] = UInt8(truncatingIfNeeded: preset.bias ?? 0)
+        data[12] = UInt8(truncatingIfNeeded: preset.noiseGate ?? 0)
+        data[13] = UInt8(truncatingIfNeeded: preset.threshold ?? 0)
+        data[14] = UInt8(truncatingIfNeeded: preset.sag ?? 0)
+        data[15] = UInt8(truncatingIfNeeded: preset.brightness ?? 0)
+        data[16] = UInt8(truncatingIfNeeded: preset.cabinet ?? 0)
+        data[17] = UInt8(truncatingIfNeeded: preset.model ?? 0)
+        data[18] = UInt8(name.count)
+        for i in 0 ..< name.count {
+            data[19+i] = name[i]
+        }
+        data[19+name.count] = 0x00
+        if let effects = preset.effects {
+            data[19+name.count] = UInt8(effects.count)
+            var index: Int = 0
+            effects.forEach { effect in
+                let effectPosition = 20+name.count+(index * 11)
+                data[effectPosition] = UInt8(effect.slot)
+                data[effectPosition+1] = effect.type == .stomp ? 0x06 : effect.type == .modulation ? 0x07 : effect.type == .delay ? 0x08 : effect.type == .reverb ? 0x09 : 0x00
+                data[effectPosition+2] = UInt8((effect.module & 0xff00) >> 8)
+                data[effectPosition+3] = UInt8(effect.module & 0x00ff)
+                data[effectPosition+4] = effect.enabled ? 0x01 : 0x00
+                data[effectPosition+5] = effect.knobs.count > 0 ? UInt8(truncatingIfNeeded: Int((effect.knobs[0].value) * 255)) : 0x00
+                data[effectPosition+6] = effect.knobs.count > 1 ? UInt8(truncatingIfNeeded: Int((effect.knobs[1].value) * 255)) : 0x00
+                data[effectPosition+7] = effect.knobs.count > 2 ? UInt8(truncatingIfNeeded: Int((effect.knobs[2].value) * 255)) : 0x00
+                data[effectPosition+8] = effect.knobs.count > 3 ? UInt8(truncatingIfNeeded: Int((effect.knobs[3].value) * 255)) : 0x00
+                data[effectPosition+9] = effect.knobs.count > 4 ? UInt8(truncatingIfNeeded: Int((effect.knobs[4].value) * 255)) : 0x00
+                data[effectPosition+10] = effect.knobs.count > 5 ? UInt8(truncatingIfNeeded: Int((effect.knobs[5].value) * 255)) : 0x00
+                index += 1
+            }
+        }
+        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
+    }
+    
+    internal func amplifierConfirmSetPreset(_ amplifier: Amplifier) {
         var data = Data(repeating: 0, count: 1)
-        data[0] = slot
+        data[0] = 0x02  // Confirm the settings
+        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
+    }
+    
+    internal func amplifier(_ amplifier: Amplifier, savePreset slot: UInt8, name: String) {
+        let name = Data(name.utf8)
+        var data = Data(repeating: 0, count: 3 + name.count)
+        data[0] = 0x03  // Save the preset in the supplied slot
+        data[1] = UInt8(truncatingIfNeeded: slot)
+        data[2] = UInt8(name.count)
+        for i in 0 ..< name.count {
+            data[2+i] = name[i]
+        }
+        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
+    }
+    
+    internal func amplifierConfirmSavePreset(_ amplifier: Amplifier) {
+        var data = Data(repeating: 0, count: 1)
+        data[0] = 0x04  // Confirm the save
         setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
     }
     
@@ -104,51 +181,91 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             
         case self.AMPLIFIER_PRESET_CHRC_UUID:
             if let value = characteristic.value {
-                preset.slot = Int(value[0])
-                preset.volume = Float(value[1]) / 255.0
-                preset.masterVolume = Float(value[2]) / 255.0
-                preset.gain1 = Float(value[3]) / 255.0
-                preset.gain2 = Float(value[4]) / 255.0
-                preset.treble = Float(value[5]) / 255.0
-                preset.middle = Float(value[6]) / 255.0
-                preset.bass = Float(value[7]) / 255.0
-                preset.presence = Float(value[8]) / 255.0
-                preset.depth = Int(value[9])
-                preset.bias = Int(value[10])
-                preset.noiseGate = Int(value[11])
-                preset.threshold = Int(value[12])
-                preset.sag = Int(value[13])
-                preset.brightness = Int(value[14])
-                preset.cabinet = Int(value[15])
-                preset.cabinetName = preset.cabinetName(preset.cabinet)
-                preset.model = Int(value[16])
-                preset.modelName = preset.modelName(preset.model)
-                let nameLength = Int(value[17])
-                preset.name = String(data: value[18..<18+nameLength], encoding: .utf8)
-                let effectCount = Int(value[18 + nameLength])
-                let effects = 19 + nameLength
-                preset.effects = [Effect]()
-                for index in 0 ..< effectCount {
-                    let effectPosition = effects + (index * 11)
-                    let module = (UInt16(value[effectPosition+2])<<8) | UInt16(value[effectPosition+3])
-                    var knobs = [Knob]()
-                    knobs.append(Knob(value: Float(value[effectPosition+5]) / 255.0))
-                    knobs.append(Knob(value: Float(value[effectPosition+6]) / 255.0))
-                    knobs.append(Knob(value: Float(value[effectPosition+7]) / 255.0))
-                    knobs.append(Knob(value: Float(value[effectPosition+8]) / 255.0))
-                    knobs.append(Knob(value: Float(value[effectPosition+9]) / 255.0))
-                    knobs.append(Knob(value: Float(value[effectPosition+10]) / 255.0))
-                    let effect = Effect(slot: Int(value[effectPosition]), type: value[effectPosition+1], module: module, enabled: value[effectPosition+4] == 0x01, knobs: knobs)
-                    preset.effects?.append(effect)
+                switch value[0] {
+                case 0x00:
+                    preset.slot = Int(value[1])
+                    preset.volume = Float(value[2]) / 255.0
+                    preset.masterVolume = Float(value[3]) / 255.0
+                    preset.gain1 = Float(value[4]) / 255.0
+                    preset.gain2 = Float(value[5]) / 255.0
+                    preset.treble = Float(value[6]) / 255.0
+                    preset.middle = Float(value[7]) / 255.0
+                    preset.bass = Float(value[8]) / 255.0
+                    preset.presence = Float(value[9]) / 255.0
+                    preset.depth = Int(value[10])
+                    preset.bias = Int(value[11])
+                    preset.noiseGate = Int(value[12])
+                    preset.threshold = Int(value[13])
+                    preset.sag = Int(value[14])
+                    preset.brightness = Int(value[15])
+                    preset.cabinet = Int(value[16])
+                    preset.cabinetName = preset.cabinetName(preset.cabinet)
+                    preset.model = Int(value[17])
+                    preset.modelName = preset.modelName(preset.model)
+                    let nameLength = Int(value[18])
+                    preset.name = String(data: value[19..<19+nameLength], encoding: .utf8)
+                    let effectCount = Int(value[19 + nameLength])
+                    let effects = 20 + nameLength
+                    preset.effects = [Effect]()
+                    for index in 0 ..< effectCount {
+                        let effectPosition = effects + (index * 11)
+                        let module = (UInt16(value[effectPosition+2])<<8) | UInt16(value[effectPosition+3])
+                        var knobs = [Knob]()
+                        knobs.append(Knob(value: Float(value[effectPosition+5]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+6]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+7]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+8]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+9]) / 255.0))
+                        knobs.append(Knob(value: Float(value[effectPosition+10]) / 255.0))
+                        let effect = Effect(slot: Int(value[effectPosition]), type: value[effectPosition+1], module: module, enabled: value[effectPosition+4] == 0x01, knobs: knobs)
+                        preset.effects?.append(effect)
+                    }
+                    NotificationCenter.default.post(name: .presetDiscovered, object: preset)
+                case 0x01:
+                    NotificationCenter.default.post(name: .presetSet, object: nil)
+                case 0x02:
+                    NotificationCenter.default.post(name: .presetSetConfirmed, object: nil)
+                case 0x03:
+                    NotificationCenter.default.post(name: .presetSaved, object: nil)
+                case 0x04:
+                    NotificationCenter.default.post(name: .presetSaveConfirmed, object: nil)
+                default:
+                    ULog.error("Unexpected command code 0x%02x in preset characteristic", value[0])
                 }
             }
-            NotificationCenter.default.post(name: .presetDiscovered, object: preset)
-
-        case self.AMPLIFIER_DATA_READY_CHRC_UUID:
+    
+        case self.AMPLIFIER_CONTROL_CHRC_UUID:
             if let value = characteristic.value {
-                let slot = Int(value[0])
-                ULog.debug("Current preset changed to %d", slot)
+                ULog.debug("Control change %d %d %d %d %d %d %d %d %d", Int(value[0]), Int(value[1]), Int(value[2]), Int(value[3]), Int(value[4]), Int(value[5]), Int(value[6]), Int(value[7]), Int(value[8]))
+                let floatValue = (Float(value[8]) / 256.0)
+                switch value[3] {
+                case 0x00:
+                    switch value[5] {
+                    case 0x0c:
+                        ULog.debug("Volume %.2f", floatValue)
+                        NotificationCenter.default.post(name: .volumeChanged, object: floatValue)
+                    case 0x01:
+                        ULog.debug("Reverb %.2f", floatValue)
+                        NotificationCenter.default.post(name: .reverbChanged, object: floatValue)
+                    default: break
+                    }
+                case 0x01:
+                    ULog.debug("Gain %.2f", floatValue)
+                    NotificationCenter.default.post(name: .gainChanged, object: floatValue)
+                case 0x04:
+                    ULog.debug("Treble %.2f", floatValue)
+                    NotificationCenter.default.post(name: .trebleChanged, object: floatValue)
+                case 0x05:
+                    ULog.debug("Middle %.2f", floatValue)
+                    NotificationCenter.default.post(name: .middleChanged, object: floatValue)
+                case 0x06:
+                    ULog.debug("Bass %.2f", floatValue)
+                    NotificationCenter.default.post(name: .bassChanged, object: floatValue)
+                default: break
+                }
+
             }
+            
         default:
                 ULog.error("Unexpected characteristic %@", characteristic.uuid.uuidString)
         }

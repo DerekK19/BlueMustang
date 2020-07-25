@@ -15,6 +15,16 @@ public protocol BlueMustangDelegate {
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverAmplifierName name: String)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetCount count: Int)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPreset preset: Preset)
+    func blueMustangDidSetPreset(_ blueMustang: BlueMustang)
+    func blueMustangDidConfirmPresetSet(_ blueMustang: BlueMustang)
+    func blueMustangDidSavePreset(_ blueMustang: BlueMustang)
+    func blueMustangDidConfirmPresetSave(_ blueMustang: BlueMustang)
+    func blueMustang(_ blueMustang: BlueMustang, didChangeVolume volume: Float)
+    func blueMustang(_ blueMustang: BlueMustang, didChangeGain gain: Float)
+    func blueMustang(_ blueMustang: BlueMustang, didChangeTreble treble: Float)
+    func blueMustang(_ blueMustang: BlueMustang, didChangeMiddle middle: Float)
+    func blueMustang(_ blueMustang: BlueMustang, didChangeBass bass: Float)
+    func blueMustang(_ blueMustang: BlueMustang, didChangeReverb reverb: Float)
     func blueMustangCannotScan(_ blueMustang: BlueMustang)
 }
 
@@ -30,6 +40,16 @@ public class BlueMustang {
         NotificationCenter.default.addObserver(self, selector: #selector(amplifierNameDiscovered), name: .amplifierNameDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetCountDiscovered), name: .presetCountDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetDiscovered), name: .presetDiscovered, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(presetSet), name: .presetSet, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(presetSetConfirmed), name: .presetSetConfirmed, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(presetSaved), name: .presetSaved, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(presetSaveConfirmed), name: .presetSaveConfirmed, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(volumeChanged), name: .volumeChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(gainChanged), name: .gainChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(trebleChanged), name: .trebleChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(middleChanged), name: .middleChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(bassChanged), name: .bassChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(reverbChanged), name: .reverbChanged, object: nil)
     }
     
     public func connect(_ amplifier: Amplifier) {
@@ -56,8 +76,20 @@ public class BlueMustang {
         scanner.amplifier(amplifier, getPreset: UInt8(truncatingIfNeeded: slot))
     }
     
-    public func amplifier(_ amplifier: Amplifier, setPreset slot: Int) {
-        scanner.amplifier(amplifier, setPreset: UInt8(truncatingIfNeeded: slot))
+    public func amplifier(_ amplifier: Amplifier, setPreset preset: Preset) {
+        scanner.amplifier(amplifier, setPreset: preset)
+    }
+    
+    public func amplifierConfirmSetPreset(_ amplifier: Amplifier) {
+        scanner.amplifierConfirmSetPreset(amplifier)
+    }
+    
+    public func amplifier(_ amplifier: Amplifier, savePreset slot: Int, name: String) {
+        scanner.amplifier(amplifier, savePreset: UInt8(truncatingIfNeeded: slot), name: name)
+    }
+    
+    public func amplifierConfirmSavePreset(_ amplifier: Amplifier) {
+        scanner.amplifierConfirmSavePreset(amplifier)
     }
     
     // MARK: - Notification handlers
@@ -88,4 +120,51 @@ public class BlueMustang {
         guard let preset = notification.object as? Preset else { return }
         delegate.blueMustang(self, didDiscoverPreset: preset)
     }
+    
+    @objc func presetSet(_ notification: Notification) {
+        delegate.blueMustangDidSetPreset(self)
+    }
+    
+    @objc func presetSetConfirmed(_ notification: Notification) {
+        delegate.blueMustangDidConfirmPresetSet(self)
+    }
+    
+    @objc func presetSaved(_ notification: Notification) {
+        delegate.blueMustangDidSavePreset(self)
+    }
+    
+    @objc func presetSaveConfirmed(_ notification: Notification) {
+        delegate.blueMustangDidConfirmPresetSave(self)
+    }
+    
+    @objc func volumeChanged(_ notification: Notification) {
+        guard let value = notification.object as? Float else { return }
+        delegate.blueMustang(self, didChangeVolume: value)
+    }
+    
+    @objc func gainChanged(_ notification: Notification) {
+        guard let value = notification.object as? Float else { return }
+        delegate.blueMustang(self, didChangeGain: value)
+    }
+    
+    @objc func trebleChanged(_ notification: Notification) {
+        guard let value = notification.object as? Float else { return }
+        delegate.blueMustang(self, didChangeTreble: value)
+    }
+    
+    @objc func middleChanged(_ notification: Notification) {
+        guard let value = notification.object as? Float else { return }
+        delegate.blueMustang(self, didChangeMiddle: value)
+    }
+    
+    @objc func bassChanged(_ notification: Notification) {
+        guard let value = notification.object as? Float else { return }
+        delegate.blueMustang(self, didChangeBass: value)
+    }
+    
+    @objc func reverbChanged(_ notification: Notification) {
+        guard let value = notification.object as? Float else { return }
+        delegate.blueMustang(self, didChangeReverb: value)
+    }
+
 }

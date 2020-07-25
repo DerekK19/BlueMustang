@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Knob.swift
 //  
 //
 //  Created by Derek Knight on 19/07/20.
@@ -15,5 +15,10 @@ public struct Knob {
     public init(value: Float, name: String? = nil) {
         self.value = value
     }
+    
+    init(withValue value: Int) {
+        let floatValue = Float(value) / 255.0
+        self.value = floatValue
+    }    
     
 }

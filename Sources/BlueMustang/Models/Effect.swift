@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Effect.swift
 //  
 //
 //  Created by Derek Knight on 19/07/20.
@@ -22,7 +22,7 @@ public struct Effect {
     public var slot: Int
     public var enabled: Bool
     public var colour: Int
-    public var knobs: [Knob]
+    public var knobs: [Knob] = []
     public let name: String?
     public let aValue1: Int? = nil
     public let aValue2: Int? = nil
@@ -84,6 +84,68 @@ public struct Effect {
         name = names.0
     }
 
+    init(withType type: EffectType, element: XMLElement) {
+        if let module = element.elements(forName: "Module").first {
+            if let id = module.attribute(forName: "ID")?.intValue {
+                if let pos = module.attribute(forName: "POS")?.intValue {
+                    self.module = UInt16(id).byteSwapped
+                    self.slot = pos
+                    self.enabled = pos > 0
+                    let names: (String?, [String])
+                    switch type {
+                    case .stomp:
+                        names = Effect.stompNames(self.module)
+                        self.type = type
+                        self.colour = 14
+                    case .modulation:
+                        names = Effect.modulationNames(self.module)
+                        self.type = type
+                        self.colour = 1
+                    case .delay:
+                        names = Effect.delayNames(self.module)
+                        self.type = type
+                        self.colour = 2
+                    case .reverb:
+                        names = Effect.reverbNames(self.module)
+                        self.type = type
+                        self.colour = 10
+                    default:
+                        self.type = .unknown
+                        self.colour = 0
+                        names = (nil, [])
+                    }
+                    name = names.0
+//                    self.aValue1 = 0
+//                    self.aValue2 = 0
+//                    self.aValue3 = 0
+                    self.knobs = [Knob]()
+                    for param in module.elements(forName: "Param") {
+                        if let index = param.attribute(forName: "ControlIndex")?.intValue {
+                            if let value = param.intValue {
+                                let shiftRightValue = value >> 8
+                                switch index {
+                                case 0...5:
+                                    let knob = Knob(withValue: shiftRightValue)
+                                    self.knobs.append(knob)
+                                default:
+                                    NSLog("Param: \(param)")
+                                    NSLog("Can't process effect control index \(index) - value '\(value) - \(shiftRightValue)'")
+                                }
+                            }
+                        }
+                    }
+                    return
+                }
+            }
+        }
+        self.module = 0
+        self.slot = 0
+        self.enabled = false
+        self.colour = 0
+        self.type = .unknown
+        self.name = nil
+    }
+    
     private static func stompNames(_ module: UInt16?) -> (String?, [String]) {
         if let module = module {
             switch module {
