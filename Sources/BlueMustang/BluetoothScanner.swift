@@ -37,7 +37,6 @@ internal extension Notification.Name {
     static let presetSet = Notification.Name("BlueMustang.presetSet")
     static let presetSetConfirmed = Notification.Name("BlueMustang.presetSetConfirmed")
     static let presetSaved = Notification.Name("BlueMustang.presetSaved")
-    static let presetSaveConfirmed = Notification.Name("BlueMustang.presetSaveConfirmed")
     static let volumeChanged = Notification.Name("BlueMustang.volumeChanged")
     static let gainChanged = Notification.Name("BlueMustang.gainChanged")
     static let trebleChanged = Notification.Name("BlueMustang.trebleChanged")
@@ -227,8 +226,6 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                     NotificationCenter.default.post(name: .presetSetConfirmed, object: nil)
                 case 0x03:
                     NotificationCenter.default.post(name: .presetSaved, object: nil)
-                case 0x04:
-                    NotificationCenter.default.post(name: .presetSaveConfirmed, object: nil)
                 default:
                     ULog.error("Unexpected command code 0x%02x in preset characteristic", value[0])
                 }

@@ -18,7 +18,6 @@ public protocol BlueMustangDelegate {
     func blueMustangDidSetPreset(_ blueMustang: BlueMustang)
     func blueMustangDidConfirmPresetSet(_ blueMustang: BlueMustang)
     func blueMustangDidSavePreset(_ blueMustang: BlueMustang)
-    func blueMustangDidConfirmPresetSave(_ blueMustang: BlueMustang)
     func blueMustang(_ blueMustang: BlueMustang, didChangeVolume volume: Float)
     func blueMustang(_ blueMustang: BlueMustang, didChangeGain gain: Float)
     func blueMustang(_ blueMustang: BlueMustang, didChangeTreble treble: Float)
@@ -43,7 +42,6 @@ public class BlueMustang {
         NotificationCenter.default.addObserver(self, selector: #selector(presetSet), name: .presetSet, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetSetConfirmed), name: .presetSetConfirmed, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetSaved), name: .presetSaved, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(presetSaveConfirmed), name: .presetSaveConfirmed, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(volumeChanged), name: .volumeChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(gainChanged), name: .gainChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(trebleChanged), name: .trebleChanged, object: nil)
@@ -131,10 +129,6 @@ public class BlueMustang {
     
     @objc func presetSaved(_ notification: Notification) {
         delegate.blueMustangDidSavePreset(self)
-    }
-    
-    @objc func presetSaveConfirmed(_ notification: Notification) {
-        delegate.blueMustangDidConfirmPresetSave(self)
     }
     
     @objc func volumeChanged(_ notification: Notification) {
