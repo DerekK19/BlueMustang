@@ -155,12 +155,6 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
     }
     
-    internal func amplifierConfirmSavePreset(_ amplifier: Amplifier) {
-        var data = Data(repeating: 0, count: 1)
-        data[0] = 0x04  // Confirm the save
-        setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
-    }
-    
     private func onAmplifierCharacteristicDiscovered(_ characteristic: CBCharacteristic) {
         var preset = Preset()
         switch characteristic.uuid {

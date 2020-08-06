@@ -86,10 +86,6 @@ public class BlueMustang {
         scanner.amplifier(amplifier, savePreset: UInt8(truncatingIfNeeded: slot), name: name)
     }
     
-    public func amplifierConfirmSavePreset(_ amplifier: Amplifier) {
-        scanner.amplifierConfirmSavePreset(amplifier)
-    }
-    
     // MARK: - Notification handlers
     
     @objc func readyToScan(_ notification: Notification) {
