@@ -33,7 +33,7 @@ internal extension Notification.Name {
     static let readyToScan = Notification.Name("BlueMustang.readyToScan")
     static let amplifierNameDiscovered = Notification.Name("BlueMustang.amplifierNameDiscovered")
     static let presetCountDiscovered = Notification.Name("BlueMustang.presetCountDiscovered")
-    static let presetNamesDiscovered = Notification.Name("BlueMustang.presetNamesDiscovered")
+    static let presetNameBlockDiscovered = Notification.Name("BlueMustang.presetNamesDiscovered")
     static let presetDiscovered = Notification.Name("BlueMustang.presetDiscovered")
     static let presetSet = Notification.Name("BlueMustang.presetSet")
     static let presetSetConfirmed = Notification.Name("BlueMustang.presetSetConfirmed")
@@ -261,10 +261,8 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             
         case self.AMPLIFIER_PRESET_NAMES_CHRC_UUID:
             if let value = characteristic.value {
-                if let stringData = String(data: value, encoding: .utf8) {
-                    ULog.debug("Names %@", stringData)
-                    let names = stringData.components(separatedBy: "|")
-                    NotificationCenter.default.post(name: .presetNamesDiscovered, object: names)
+                if let stringData = String(data: value.advanced(by: 2), encoding: .utf8) {
+                    NotificationCenter.default.post(name: .presetNameBlockDiscovered, object: (UInt8(value[0]), UInt8(value[1]), stringData))
                 }
             }
             break

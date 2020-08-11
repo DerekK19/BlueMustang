@@ -39,7 +39,7 @@ public class BlueMustang {
         NotificationCenter.default.addObserver(self, selector: #selector(readyToScan), name: .readyToScan, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(amplifierNameDiscovered), name: .amplifierNameDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetCountDiscovered), name: .presetCountDiscovered, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(presetNamesDiscovered), name: .presetNamesDiscovered, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(presetNameBlockDiscovered), name: .presetNameBlockDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetDiscovered), name: .presetDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetSet), name: .presetSet, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetSetConfirmed), name: .presetSetConfirmed, object: nil)
@@ -112,9 +112,9 @@ public class BlueMustang {
         delegate.blueMustang(self, didDiscoverPresetCount: count)
     }
 
-    @objc func presetNamesDiscovered(_ notification: Notification) {
-        guard let names = notification.object as? [String] else { return }
-        delegate.blueMustang(self, didDiscoverPresetNames: names)
+    @objc func presetNameBlockDiscovered(_ notification: Notification) {
+        guard let block = notification.object as? (UInt8, UInt8, String) else { return }
+        ULog.debug("Name block %d, %d %@", block.0, block.1, block.2)
     }
 
     @objc func presetDiscovered(_ notification: Notification) {
