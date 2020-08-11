@@ -33,6 +33,7 @@ internal extension Notification.Name {
     static let readyToScan = Notification.Name("BlueMustang.readyToScan")
     static let amplifierNameDiscovered = Notification.Name("BlueMustang.amplifierNameDiscovered")
     static let presetCountDiscovered = Notification.Name("BlueMustang.presetCountDiscovered")
+    static let presetNamesDiscovered = Notification.Name("BlueMustang.presetNamesDiscovered")
     static let presetDiscovered = Notification.Name("BlueMustang.presetDiscovered")
     static let presetSet = Notification.Name("BlueMustang.presetSet")
     static let presetSetConfirmed = Notification.Name("BlueMustang.presetSetConfirmed")
@@ -54,6 +55,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     private let AMPLIFIER_PRESET_COUNT_CHRC_UUID: CBUUID  = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130002")
     private let AMPLIFIER_PRESET_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130003")
     private let AMPLIFIER_CONTROL_CHRC_UUID : CBUUID      = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
+    private let AMPLIFIER_PRESET_NAMES_CHRC_UUID : CBUUID = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130005")
 
     private var centralManager: CBCentralManager!
     private var serviceDiscoveryInProgress = false
@@ -256,6 +258,16 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                 }
 
             }
+            
+        case self.AMPLIFIER_PRESET_NAMES_CHRC_UUID:
+            if let value = characteristic.value {
+                if let stringData = String(data: value, encoding: .utf8) {
+                    ULog.debug("Names %@", stringData)
+                    let names = stringData.components(separatedBy: "|")
+                    NotificationCenter.default.post(name: .presetNamesDiscovered, object: names)
+                }
+            }
+            break
             
         default:
                 ULog.error("Unexpected characteristic %@", characteristic.uuid.uuidString)
