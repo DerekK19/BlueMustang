@@ -14,6 +14,7 @@ public protocol BlueMustangDelegate {
     func blueMustang(_ blueMustang: BlueMustang, didDisconnectAmplifier amplifier: Amplifier)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverAmplifierName name: String)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetCount count: Int)
+    func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetNames names: [String])
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPreset preset: Preset)
     func blueMustangDidSetPreset(_ blueMustang: BlueMustang)
     func blueMustangDidConfirmPresetSet(_ blueMustang: BlueMustang)
@@ -38,6 +39,7 @@ public class BlueMustang {
         NotificationCenter.default.addObserver(self, selector: #selector(readyToScan), name: .readyToScan, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(amplifierNameDiscovered), name: .amplifierNameDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetCountDiscovered), name: .presetCountDiscovered, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(presetNamesDiscovered), name: .presetNamesDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetDiscovered), name: .presetDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetSet), name: .presetSet, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetSetConfirmed), name: .presetSetConfirmed, object: nil)
@@ -108,6 +110,11 @@ public class BlueMustang {
     @objc func presetCountDiscovered(_ notification: Notification) {
         guard let count = notification.object as? Int else { return }
         delegate.blueMustang(self, didDiscoverPresetCount: count)
+    }
+
+    @objc func presetNamesDiscovered(_ notification: Notification) {
+        guard let names = notification.object as? [String] else { return }
+        delegate.blueMustang(self, didDiscoverPresetNames: names)
     }
 
     @objc func presetDiscovered(_ notification: Notification) {
