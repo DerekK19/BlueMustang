@@ -114,7 +114,6 @@ public class BlueMustang {
 
     @objc func presetNameBlockDiscovered(_ notification: Notification) {
         guard let block = notification.object as? (UInt8, UInt8, [(UInt8, String)]) else { return }
-        ULog.debug("Name block %d, %d %@", block.0, block.1, block.2)
         delegate.blueMustang(self, didDiscoverPresetNames: block.2)
     }
 
