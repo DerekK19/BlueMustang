@@ -116,7 +116,7 @@ public class BlueMustang {
         guard let block = notification.object as? (UInt8, UInt8, Data) else { return }
         let data = block.2
         let entries = data.split(separator: 0xff)
-        let names = entries.map { ($0[0], String(data: $0.advanced(by: 1), encoding: .utf8) ?? "") }
+        let names = entries.map { entry in (entry.first ?? 0xff, String(data: entry.advanced(by: 1), encoding: .utf8) ?? "") }
         ULog.debug("Name block %d, %d %@", block.0, block.1, names)
         delegate.blueMustang(self, didDiscoverPresetNames: names)        
     }
