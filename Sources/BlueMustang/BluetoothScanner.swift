@@ -261,9 +261,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             
         case self.AMPLIFIER_PRESET_NAMES_CHRC_UUID:
             if let value = characteristic.value {
-                if let stringData = String(data: value.advanced(by: 2), encoding: .utf8) {
-                    NotificationCenter.default.post(name: .presetNameBlockDiscovered, object: (UInt8(value[0]), UInt8(value[1]), stringData))
-                }
+                NotificationCenter.default.post(name: .presetNameBlockDiscovered, object: (UInt8(value[0]), UInt8(value[1]), value.advanced(by: 2)))
             }
             break
             

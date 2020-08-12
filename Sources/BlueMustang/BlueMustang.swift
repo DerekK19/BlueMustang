@@ -14,7 +14,7 @@ public protocol BlueMustangDelegate {
     func blueMustang(_ blueMustang: BlueMustang, didDisconnectAmplifier amplifier: Amplifier)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverAmplifierName name: String)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetCount count: Int)
-    func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetNames names: [String])
+    func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetNames names: [(UInt8, String)])
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPreset preset: Preset)
     func blueMustangDidSetPreset(_ blueMustang: BlueMustang)
     func blueMustangDidConfirmPresetSet(_ blueMustang: BlueMustang)
@@ -113,8 +113,12 @@ public class BlueMustang {
     }
 
     @objc func presetNameBlockDiscovered(_ notification: Notification) {
-        guard let block = notification.object as? (UInt8, UInt8, String) else { return }
-        ULog.debug("Name block %d, %d %@", block.0, block.1, block.2)
+        guard let block = notification.object as? (UInt8, UInt8, Data) else { return }
+        let data = block.2
+        let entries = data.split(separator: 0x00)
+        let names = entries.map { ($0[0], String(data: $0.advanced(by: 1), encoding: .utf8) ?? "") }
+        ULog.debug("Name block %d, %d %@", block.0, block.1, names)
+        delegate.blueMustang(self, didDiscoverPresetNames: names)        
     }
 
     @objc func presetDiscovered(_ notification: Notification) {
