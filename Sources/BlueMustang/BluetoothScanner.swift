@@ -157,7 +157,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         setCharacteristic(AMPLIFIER_PRESET_CHRC_UUID, value: data, forAmplifier: amplifier)
     }
     
-    private func onAmplifierCharacteristicDiscovered(_ characteristic: CBCharacteristic) {
+    private func onPeripheral(_ peripheral: CBPeripheral, discoveredCharacteristic characteristic: CBCharacteristic) {
         var preset = Preset()
         switch characteristic.uuid {
         case self.AMPLIFIER_NAME_CHRC_UUID:
@@ -256,17 +256,23 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                     NotificationCenter.default.post(name: .bassChanged, object: floatValue)
                 default: break
                 }
-
             }
             
         case self.AMPLIFIER_PRESET_NAMES_CHRC_UUID:
             if let value = characteristic.value {
-                NotificationCenter.default.post(name: .presetNameBlockDiscovered, object: (UInt8(value[0]), UInt8(value[1]), value.advanced(by: 2)))
+                if value.count > 2 {
+                    let data = value.advanced(by: 2)
+                    let entries = data.split(separator: 0xff)
+                    let names = entries.map { entry in (entry.first ?? 0xff, String(data: entry.advanced(by: 1), encoding: .utf8) ?? "") }
+                    NotificationCenter.default.post(name: .presetNameBlockDiscovered, object: (UInt8(value[0]), UInt8(value[1]), names))
+                    let next = value[1] + UInt8(names.count)
+                    peripheral.writeValue(Data([next]), for: characteristic, type: .withResponse)
+                }
             }
             break
             
         default:
-                ULog.error("Unexpected characteristic %@", characteristic.uuid.uuidString)
+            ULog.error("Unexpected characteristic %@", characteristic.uuid.uuidString)
         }
     }
     
@@ -392,7 +398,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         } else {
             ULog.verbose("Characteristic value: nil")
         }
-        onAmplifierCharacteristicDiscovered(characteristic)
+        onPeripheral(peripheral, discoveredCharacteristic: characteristic)
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor descriptor: CBDescriptor, error: Error?) {

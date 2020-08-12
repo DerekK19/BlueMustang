@@ -113,12 +113,9 @@ public class BlueMustang {
     }
 
     @objc func presetNameBlockDiscovered(_ notification: Notification) {
-        guard let block = notification.object as? (UInt8, UInt8, Data) else { return }
-        let data = block.2
-        let entries = data.split(separator: 0xff)
-        let names = entries.map { entry in (entry.first ?? 0xff, String(data: entry.advanced(by: 1), encoding: .utf8) ?? "") }
-        ULog.debug("Name block %d, %d %@", block.0, block.1, names)
-        delegate.blueMustang(self, didDiscoverPresetNames: names)        
+        guard let block = notification.object as? (UInt8, UInt8, [(UInt8, String)]) else { return }
+        ULog.debug("Name block %d, %d %@", block.0, block.1, block.2)
+        delegate.blueMustang(self, didDiscoverPresetNames: block.2)
     }
 
     @objc func presetDiscovered(_ notification: Notification) {
