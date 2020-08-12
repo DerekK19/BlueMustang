@@ -454,4 +454,15 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         }
         ULog.verbose("Characteristic %@ %@ notify", characteristic.uuid, characteristic.isNotifying ? "will" : "will not")
     }
+    
+    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didWriteValueFor characteristic %@: error: %@", characteristic.uuid.uuidString, error?.localizedDescription ?? "Unknown")
+            return
+        }
+        ULog.verbose("Characteristic %@ did Write", characteristic.uuid)
+        if characteristic.uuid == AMPLIFIER_PRESET_NAMES_CHRC_UUID {
+            peripheral.readValue(for: characteristic)
+        }
+    }
 }
