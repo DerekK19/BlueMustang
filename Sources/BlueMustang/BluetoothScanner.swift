@@ -53,9 +53,9 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     private let AMPLIFIER_SERVICE_UUID: CBUUID            = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130000")
     private let AMPLIFIER_NAME_CHRC_UUID: CBUUID          = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130001")
     private let AMPLIFIER_PRESET_COUNT_CHRC_UUID: CBUUID  = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130002")
-    private let AMPLIFIER_PRESET_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130003")
-    private let AMPLIFIER_CONTROL_CHRC_UUID : CBUUID      = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
-    private let AMPLIFIER_PRESET_NAMES_CHRC_UUID : CBUUID = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130005")
+    private let AMPLIFIER_PRESET_NAMES_CHRC_UUID : CBUUID = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130003")
+    private let AMPLIFIER_PRESET_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
+    private let AMPLIFIER_CONTROL_CHRC_UUID : CBUUID      = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130005")
 
     private var centralManager: CBCentralManager!
     private var serviceDiscoveryInProgress = false
@@ -266,7 +266,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                     let names = entries.map { entry in (entry.first ?? 0xff, String(data: entry.advanced(by: 1), encoding: .utf8) ?? "") }
                     NotificationCenter.default.post(name: .presetNameBlockDiscovered, object: (UInt8(value[0]), UInt8(value[1]), names))
                     let next = value[1] + UInt8(names.count)
-                    peripheral.writeValue(Data([next]), for: characteristic, type: .withResponse)
+                    peripheral.writeValue(Data([0x60, next]), for: characteristic, type: .withResponse)
                 }
             }
             break
