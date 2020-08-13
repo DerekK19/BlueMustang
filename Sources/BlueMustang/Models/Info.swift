@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AEXML
 
 public struct Info {
     public var name: String
@@ -27,28 +28,28 @@ public struct Info {
         self.tags = tags
         self.fenderid = fenderid
     }
-
-    init(withElement element: XMLElement) {
-        self.name = element.attribute(forName: "name")?.stringValue ?? ""
-        self.author = element.attribute(forName: "author")?.stringValue ?? ""
-        self.rating = element.attribute(forName: "rating")?.intValue ?? 0
-        self.genre1 = element.attribute(forName: "genre1")?.intValue ?? -1
-        self.genre2 = element.attribute(forName: "genre2")?.intValue ?? -1
-        self.genre3 = element.attribute(forName: "genre3")?.intValue ?? -1
-        self.tags = element.attribute(forName: "tags")?.stringValue ?? ""
-        self.fenderid = element.attribute(forName: "fenderid")?.intValue ?? 0
+    
+    init(withElement element: AEXMLElement) {
+        self.name = element.attributes["name"] ?? ""
+        self.author = element.attributes["author"] ?? ""
+        self.rating = Int(element.attributes["rating"] ?? "0") ?? 0
+        self.genre1 = Int(element.attributes["genre1"] ?? "-1") ?? -1
+        self.genre2 = Int(element.attributes["genre2"] ?? "-1") ?? -1
+        self.genre3 = Int(element.attributes["genre3"] ?? "-1") ?? -1
+        self.tags = element.attributes["tags"] ?? ""
+        self.fenderid = Int(element.attributes["fenderid"] ?? "0") ?? 0
     }
     
-    func xml() -> XMLElement {
-        let info = XMLElement(name: "Info")
-        info.addAttribute(XMLNode.attribute(withName: "name", stringValue: name) as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "author", stringValue: author) as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "rating", stringValue: "\(rating)") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "genre1", stringValue: "\(genre1)") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "genre2", stringValue: "\(genre2)") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "genre3", stringValue: "\(genre3)") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "tags", stringValue: tags) as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "fenderid", stringValue: "\(fenderid)") as! XMLNode)
+    func xml() -> AEXMLElement {
+        let info = AEXMLElement(name: "Info",
+                                attributes: ["name" : name,
+                                             "author" : author,
+                                             "rating" : "\(rating)",
+                                             "genre1" : "\(genre1)",
+                                             "genre2" : "\(genre2)",
+                                             "genre3" : "\(genre3)",
+                                             "tags" : tags,
+                                             "fenderid" : "\(fenderid)"])
         return info
     }
     

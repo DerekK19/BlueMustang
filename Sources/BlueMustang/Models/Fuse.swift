@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AEXML
 
 public struct Fuse {
     
@@ -15,16 +16,16 @@ public struct Fuse {
         self.info = info
     }
 
-    init(withElement element: XMLElement) {
-        if let infoElement = element.elements(forName: "Info").first {
+    init(withElement element: AEXMLElement) {
+        if let infoElement = element.firstDescendant(where: { $0.name == "Info"} ) {
             self.info = Info(withElement: infoElement)
         }
     }
     
-    func xml() -> XMLElement {
-        let fuse = XMLElement(name: "FUSE")
+    func xml() -> AEXMLElement {
+        let fuse = AEXMLElement(name: "FUSE")
         if info != nil { fuse.addChild(info!.xml()) }
-        let colours = XMLElement(name: "PedalColors")
+        let colours = AEXMLElement(name: "PedalColors")
         colours.addChild(name: "Color", value: 14, attributes: ["ID" : "1"])
         colours.addChild(name: "Color", value: 1, attributes: ["ID" : "2"])
         colours.addChild(name: "Color", value: 2, attributes: ["ID" : "3"])

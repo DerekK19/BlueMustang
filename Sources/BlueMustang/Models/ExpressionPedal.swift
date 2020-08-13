@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AEXML
 
 public class ExpressionPedal {
     
@@ -33,31 +34,31 @@ public class ExpressionPedal {
         self.parameterIndex = 0
     }
     
-    init(withElement element: XMLElement) {
-        self.volumeModeBehavior = element.attribute(forName: "VolumeModeBehavior")?.intValue ?? 0
-        self.expressionModeBehavior = element.attribute(forName: "ExpressionModeBehavior")?.intValue ?? 0
-        self.heelSetting = element.attribute(forName: "HeelSetting")?.intValue ?? 0
-        self.toeSetting = element.attribute(forName: "ToeSetting")?.intValue ?? 0
-        self.pedalMode = element.attribute(forName: "PedalMode")?.intValue ?? 0
-        self.bypassEffectWhenVolumeMode = element.attribute(forName: "BypassEffectWhenVolumeMode")?.intValue ?? 0
-        self.volumeSwitchRevert = element.attribute(forName: "VolumeSwitchRevert")?.intValue ?? 0
-        self.defaultPedalState = element.attribute(forName: "DefaultPedalState")?.intValue ?? 0
-        self.pedalOverrideState = element.attribute(forName: "PedalOverrideState")?.intValue ?? 0
-        self.parameterIndex = element.attribute(forName: "ParameterIndex")?.intValue ?? 0
+    init(withElement element: AEXMLElement) {
+        self.volumeModeBehavior = Int(element.attributes["VolumeModeBehavior"] ?? "0") ?? 0
+        self.expressionModeBehavior = Int(element.attributes["ExpressionModeBehavior"] ?? "0") ?? 0
+        self.heelSetting = Int(element.attributes["HeelSetting"] ?? "0") ?? 0
+        self.toeSetting = Int(element.attributes["ToeSetting"] ?? "0") ?? 0
+        self.pedalMode = Int(element.attributes["PedalMode"] ?? "0") ?? 0
+        self.bypassEffectWhenVolumeMode = Int(element.attributes["BypassEffectWhenVolumeMode"] ?? "0") ?? 0
+        self.volumeSwitchRevert = Int(element.attributes["VolumeSwitchRevert"] ?? "0") ?? 0
+        self.defaultPedalState = Int(element.attributes["DefaultPedalState"] ?? "0") ?? 0
+        self.pedalOverrideState = Int(element.attributes["PedalOverrideState"] ?? "0") ?? 0
+        self.parameterIndex = Int(element.attributes["ParameterIndex"] ?? "0") ?? 0
     }
     
-    func xml() -> XMLElement {
-        let info = XMLElement(name: "FirstExpressionPedal")
-        info.addAttribute(XMLNode.attribute(withName: "VolumeModeBehavior", stringValue: "\(String(describing: volumeModeBehavior))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "ExpressionModeBehavior", stringValue: "\(String(describing: expressionModeBehavior))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "HeelSetting", stringValue: "\(String(describing: heelSetting))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "ToeSetting", stringValue: "\(String(describing: toeSetting))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "PedalMode", stringValue: "\(String(describing: pedalMode))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "BypassEffectWhenVolumeMode", stringValue: "\(String(describing: bypassEffectWhenVolumeMode))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "VolumeSwitchRevert", stringValue: "\(String(describing: volumeSwitchRevert))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "DefaultPedalState", stringValue: "\(String(describing: defaultPedalState))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "PedalOverrideState", stringValue: "\(String(describing: pedalOverrideState))") as! XMLNode)
-        info.addAttribute(XMLNode.attribute(withName: "ParameterIndex", stringValue: "\(String(describing: parameterIndex))") as! XMLNode)
+    func xml() -> AEXMLElement {
+        let info = AEXMLElement(name: "FirstExpressionPedal",
+                                attributes: ["VolumeModeBehavior" : "\(String(describing: volumeModeBehavior))",
+                                             "ExpressionModeBehavior" : "\(String(describing: expressionModeBehavior))",
+                                             "HeelSetting" : "\(String(describing: heelSetting))",
+                                             "ToeSetting" : "\(String(describing: toeSetting))",
+                                             "PedalMode" : "\(String(describing: pedalMode))",
+                                             "BypassEffectWhenVolumeMode" : "\(String(describing: bypassEffectWhenVolumeMode))",
+                                             "VolumeSwitchRevert" : "\(String(describing: volumeSwitchRevert))",
+                                             "DefaultPedalState" : "\(String(describing: defaultPedalState))",
+                                             "PedalOverrideState" : "\(String(describing: pedalOverrideState))",
+                                             "ParameterIndex" : "\(String(describing: parameterIndex))"])
         return info
     }
 

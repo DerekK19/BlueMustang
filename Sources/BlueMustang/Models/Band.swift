@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AEXML
 
 public struct Band {
     
@@ -27,31 +28,31 @@ public struct Band {
         self.songFile = songFile
     }
     
-    init(withElement element: XMLElement) {
-        self.type = element.attribute(forName: "Type")?.intValue ?? 0
-        self.iRepeat = element.attribute(forName: "Repeat")?.intValue ?? 0
-        self.audioMix = element.elements(forName: "AudioMix").first?.intValue ?? 0
-        self.balance = element.elements(forName: "Balance").first?.intValue ?? 0
-        self.speed = element.elements(forName: "Speed").first?.intValue ?? 0
-        self.pitch = element.elements(forName: "Pitch").first?.intValue ?? 0
-        if let songElement = element.elements(forName: "SongFile").first {
+    init(withElement element: AEXMLElement) {
+        self.type = Int(element.attributes["Type"] ?? "0") ?? 0
+        self.iRepeat = Int(element.attributes["Repeat"] ?? "0") ?? 0
+        self.audioMix = element.firstDescendant(where: { $0.name == "AudioMix" })?.intValue ?? 0
+        self.balance = element.firstDescendant(where: { $0.name == "Balance" })?.intValue ?? 0
+        self.speed = element.firstDescendant(where: { $0.name == "Speed" })?.intValue ?? 0
+        self.pitch = element.firstDescendant(where: { $0.name == "Pitch" })?.intValue ?? 0
+        if let songElement = element.firstDescendant(where: { $0.name == "SongFile"}) {
             self.songFile = SongFile.init(withElement: songElement)
         }
     }
     
-    func xml() -> XMLElement {
-        let band = XMLElement(name: "Band")
-        band.addAttribute(XMLNode.attribute(withName: "Type", stringValue: "\(type)") as! XMLNode)
-        band.addAttribute(XMLNode.attribute(withName: "Repeat", stringValue: "\(iRepeat)") as! XMLNode)
-        band.addChild(songFile?.xml() ?? XMLElement(name: "SongFile"))
-        band.addChild(name: "AudioMix", value: "\(audioMix)", attributes: [:])
-        band.addChild(name: "Balance", value: "\(balance)", attributes: [:])
-        band.addChild(name: "Speed", value: "\(speed)", attributes: [:])
-        band.addChild(name: "Pitch", value: "\(pitch)", attributes: [:])
-        band.addChild(XMLElement(name: "Tempo"))
-        band.addChild(XMLElement(name: "Transpose"))
-        band.addChild(XMLElement(name: "DrumSolo"))
-        band.addChild(XMLElement(name: "CountIn"))
+    func xml() -> AEXMLElement {
+        let band = AEXMLElement(name: "Band",
+                                attributes: ["Type" : "\(type)",
+                                             "Repeat" : "\(iRepeat)"])
+        band.addChild(songFile?.xml() ?? AEXMLElement(name: "SongFile"))
+        band.addChild(name: "AudioMix", value: "\(audioMix)")
+        band.addChild(name: "Balance", value: "\(balance)")
+        band.addChild(name: "Speed", value: "\(speed)")
+        band.addChild(name: "Pitch", value: "\(pitch)")
+        band.addChild(AEXMLElement(name: "Tempo"))
+        band.addChild(AEXMLElement(name: "Transpose"))
+        band.addChild(AEXMLElement(name: "DrumSolo"))
+        band.addChild(AEXMLElement(name: "CountIn"))
         return band
     }
     

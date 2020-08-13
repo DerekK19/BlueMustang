@@ -6,11 +6,12 @@
 //
 
 import Foundation
+import AEXML
 
-extension XMLNode {
+extension AEXMLElement {
     var intValue: Int? {
         get {
-            if let str = stringValue {
+            if let str = value {
                 return Int(str)
             }
             return nil

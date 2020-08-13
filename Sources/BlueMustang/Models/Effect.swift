@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AEXML
 
 public enum EffectType : String {
     case unknown = ""
@@ -84,10 +85,10 @@ public struct Effect {
         name = names.0
     }
 
-    init(withType type: EffectType, element: XMLElement) {
-        if let module = element.elements(forName: "Module").first {
-            if let id = module.attribute(forName: "ID")?.intValue {
-                if let pos = module.attribute(forName: "POS")?.intValue {
+    init(withType type: EffectType, element: AEXMLElement) {
+        if let module = element.firstDescendant(where: { $0.name == "Module" }) {
+            if let id = Int(module.attributes["ID"] ?? "xx") {
+                if let pos = Int(module.attributes["POS"] ?? "xx") {
                     self.module = UInt16(id).byteSwapped
                     self.slot = pos
                     self.enabled = pos > 0
@@ -119,8 +120,8 @@ public struct Effect {
 //                    self.aValue2 = 0
 //                    self.aValue3 = 0
                     self.knobs = [Knob]()
-                    for param in module.elements(forName: "Param") {
-                        if let index = param.attribute(forName: "ControlIndex")?.intValue {
+                    for param in module.allDescendants(where:  { $0.name == "Param"} ) {
+                        if let index = Int(param.attributes["ControlIndex"] ?? "xx") {
                             if let value = param.intValue {
                                 let shiftRightValue = value >> 8
                                 switch index {

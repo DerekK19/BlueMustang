@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AEXML
 
 public struct SongFile {
     
@@ -17,15 +18,13 @@ public struct SongFile {
         self.name = name
     }
     
-    init(withElement element: XMLElement) {
-        self.location = element.attribute(forName: "Location")?.intValue ?? 0
-        self.name = element.stringValue
+    init(withElement element: AEXMLElement) {
+        self.location = Int(element.attributes["Location"] ?? "0") ?? 0
+        self.name = element.value
     }
 
-    func xml() -> XMLElement {
-        let songFile = XMLElement(name: "SongFile")
-        songFile.addAttribute(XMLNode.attribute(withName: "Location", stringValue: "\(location)") as! XMLNode)
-        songFile.stringValue = name
+    func xml() -> AEXMLElement {
+        let songFile = AEXMLElement(name: "SongFile", value: name, attributes: ["Location" : "\(location)"])
         return songFile
     }
 
