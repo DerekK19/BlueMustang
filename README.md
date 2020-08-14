@@ -3,12 +3,18 @@
 [![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager)
 [![License MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=flat)](https://github.com/tadija/AEXML/blob/master/LICENSE)
 # BlueMustang
-============
-[![Swift Package Manager](https://rawgit.com/jlyonsmith/artwork/master/SwiftPackageManager/swiftpackagemanager-compatible.svg)](https://swift.org/package-manager/)
 
-BlueMustang is a framework written in Swift that interfaces to a Fender Mustang Amplifier through a Bluetooth bridge application
+**BlueMustang is a framework written in Swift that interfaces to a Fender Mustang Amplifier through a Bluetooth bridge application**
 
-Such a Bluetooth application can be found on [Github](https://github.com/derekk19/blue_mustang). It is a Python module that can run on a Raspberry Pi
+## Related
+
+### blue_mustang Bluetooth bridge application
+A Bluetooth application can be found on [Github](https://github.com/derekk19/blue_mustang). It is a Python module that can run on a Raspberry Pi. When the Raspberry Pi is connected to a Fender Mustang amplifier though USB, blue_mustang acts as a USB-Bluetooth bridge.
+
+### Defender client application
+A macOS/iOS application that uses BlueMustang to control a Fender Mustang amplifier. Because Defender uses BlueMustang, it means the client device (be it a Mac or an iPad/iPhone) does not need to be physically connected to the amplifier. This resolves the major issue with controlling a Fender Mustang amplifier from an iOS device.
+
+> I made this software for personal use, but feel free to use it or contribute. My amplifier is a Fender Mustang III V2 and is connected to a Raspberry Pi Rev 3 running blue_mustang
 
 ## Specification
 If writing a Bluetooth module from scratch, You should implement a Bluetooth Low Energy (BLE) peripheral with the following UUIDS:
