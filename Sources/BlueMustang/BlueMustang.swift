@@ -31,7 +31,8 @@ public protocol BlueMustangDelegate {
 public class BlueMustang {
     
     private let PERIPHERAL_DEFAULTS_KEY = "PERIPHERAL_DEFAULTS_KEY"
-    
+    private let AMPLIFIER_NAME_DEFAULTS_KEY = "AMPLIFIER_NAME_DEFAULTS_KEY"
+
     private let delegate: BlueMustangDelegate
     private let scanner: BluetoothScanner
     
@@ -100,6 +101,9 @@ public class BlueMustang {
             let knownPeripheralUUID = stringUUID == nil ? nil : UUID(uuidString: stringUUID!)
             scanner.startScanning(withPeripheralUUID: knownPeripheralUUID) { amplifier in
                 UserDefaults.standard.set(amplifier.uuid, forKey: self.PERIPHERAL_DEFAULTS_KEY)
+                if let name = UserDefaults.standard.string(forKey: self.AMPLIFIER_NAME_DEFAULTS_KEY) {
+                    amplifier.name = name
+                }
                 self.delegate.blueMustang(self, didFindAmplifier: amplifier)
             }
         } else {
@@ -109,6 +113,7 @@ public class BlueMustang {
     
     @objc func amplifierNameDiscovered(_ notification: Notification) {
         guard let name = notification.object as? String else { return }
+        UserDefaults.standard.set(name, forKey: AMPLIFIER_NAME_DEFAULTS_KEY)
         delegate.blueMustang(self, didDiscoverAmplifierName: name)
     }
 
