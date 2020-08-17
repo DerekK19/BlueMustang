@@ -71,9 +71,22 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
     }
     
-    internal func startScanning(_ onDiscover: @escaping (Amplifier) -> Void) {
+    internal func startScanning(withPeripheralUUID peripheralUUID: UUID?, _ onDiscover: @escaping (Amplifier) -> Void) {
         self.onAmplifierDiscovered = onDiscover
-        centralManager.scanForPeripherals(withServices: [HIDUUID], options: nil)
+        var peripherals = [CBPeripheral]()
+        if let peripheralUUID = peripheralUUID {
+            peripherals = centralManager.retrievePeripherals(withIdentifiers: [peripheralUUID])
+            ULog.debug("retrievePeripherals returns %d", peripherals.count)
+        } else {
+            peripherals = centralManager.retrieveConnectedPeripherals(withServices: [HIDUUID])
+            ULog.debug("retrieveConnectedPeripherals returns %d", peripherals.count)
+        }
+        if let peripheral = peripherals.first {
+            onDiscover(Amplifier(peripheral: peripheral))
+        } else {
+            ULog.debug("Scan for peripherals")
+            centralManager.scanForPeripherals(withServices: [HIDUUID], options: nil)
+        }
     }
     
     internal func connect(_ amplifier: Amplifier, onConnect: @escaping (Amplifier) -> Void, onServices: @escaping (Amplifier) -> Void, onCharacteristics: @escaping (Amplifier) -> Void) {
