@@ -11,7 +11,7 @@ public protocol BlueMustangDelegate {
     func blueMustangIsReadyToScan(_ blueMustang: BlueMustang)
     func blueMustang(_ blueMustang: BlueMustang, didFindAmplifier amplifier: Amplifier)
     func blueMustang(_ blueMustang: BlueMustang, didConnectAmplifier amplifier: Amplifier)
-    func blueMustang(_ blueMustang: BlueMustang, didDisconnectAmplifier amplifier: Amplifier)
+    func blueMustang(_ blueMustang: BlueMustang, didDisconnectAmplifier amplifier: Amplifier?)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverAmplifierName name: String)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetCount count: Int)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetNames names: [(UInt8, String)])
@@ -40,6 +40,7 @@ public class BlueMustang {
         self.delegate = delegate
         scanner = BluetoothScanner()
         NotificationCenter.default.addObserver(self, selector: #selector(readyToScan), name: .readyToScan, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(amplifierServiceChanged), name: .amplifierServiceChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(amplifierNameDiscovered), name: .amplifierNameDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetCountDiscovered), name: .presetCountDiscovered, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(presetNameBlockDiscovered), name: .presetNameBlockDiscovered, object: nil)
@@ -109,6 +110,12 @@ public class BlueMustang {
         } else {
             delegate.blueMustangCannotScan(self)
         }
+    }
+    
+    @objc func amplifierServiceChanged(_ notification: Notification) {
+        UserDefaults.standard.removeObject(forKey: PERIPHERAL_DEFAULTS_KEY)
+        UserDefaults.standard.removeObject(forKey: AMPLIFIER_NAME_DEFAULTS_KEY)
+        self.delegate.blueMustang(self, didDisconnectAmplifier: nil)
     }
     
     @objc func amplifierNameDiscovered(_ notification: Notification) {

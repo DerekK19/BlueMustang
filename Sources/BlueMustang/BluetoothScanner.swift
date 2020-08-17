@@ -31,6 +31,7 @@ extension CBPeripheral {
 
 internal extension Notification.Name {
     static let readyToScan = Notification.Name("BlueMustang.readyToScan")
+    static let amplifierServiceChanged = Notification.Name("BlueMustang.amplifierServiceChanged")
     static let amplifierNameDiscovered = Notification.Name("BlueMustang.amplifierNameDiscovered")
     static let presetCountDiscovered = Notification.Name("BlueMustang.presetCountDiscovered")
     static let presetNameBlockDiscovered = Notification.Name("BlueMustang.presetNamesDiscovered")
@@ -406,7 +407,10 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
     
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
-        ULog.debug("peripheral didModifyServices, %@", invalidatedServices.map { $0.uuid })
+        ULog.verbose("peripheral didModifyServices, %@", invalidatedServices.map { $0.uuid })
+        if invalidatedServices.map({ $0.uuid }).contains(AMPLIFIER_SERVICE_UUID) {
+            NotificationCenter.default.post(name: .amplifierServiceChanged, object: nil)
+        }
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
