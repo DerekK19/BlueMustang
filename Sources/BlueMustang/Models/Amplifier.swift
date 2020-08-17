@@ -27,7 +27,7 @@ public class Amplifier {
 
     init(peripheral: CBPeripheral) {
         self.peripheral = peripheral
-        self.advertisedName = nil
+        self.advertisedName = peripheral.name
         self.rssi = nil
     }
     
