@@ -351,6 +351,14 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         onAmplifierDisconnected?(peripheral.asAmplifier())
     }
     
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        ULog.debug("centralManager didFailToConnect %@", error?.localizedDescription ?? "Unknown Reason")
+    }
+    
+    func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
+        ULog.debug("centralManager willRestoreState %@", dict)
+    }
+    
     // MARK: - CBPeripheralDelegate
     
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
@@ -395,6 +403,10 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         characteristic.descriptors?.forEach { descriptor in
             peripheral.readValue(for: descriptor)
         }
+    }
+    
+    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+        ULog.debug("peripheral didModifyServices, %@", invalidatedServices.map { $0.uuid })
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
