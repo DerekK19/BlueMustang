@@ -69,9 +69,9 @@ internal class ULog {
     static func verbose(_ format: StaticString, _ args: CVarArg...) {
         let f = format.withUTF8Buffer { String(decoding: $0, as: UTF8.self) }
         let s = String.init(format: f, arguments: args)
-//        #if VERBOSE
+        #if VERBOSE
             os_log(stringFormat, log: .uLogger, type: .debug, s)
-//        #endif
+        #endif
         #if os(iOS) || os(OSX)
             #if USE_FLOGGER
                 Flogger.log.verbose(s)
