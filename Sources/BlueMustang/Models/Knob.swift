@@ -14,11 +14,13 @@ public struct Knob {
 
     public init(value: Float, name: String? = nil) {
         self.value = value
+        self.name = name
     }
     
-    init(withValue value: Int) {
+    init(withValue value: Int, name: String?) {
         let floatValue = Float(value) / 255.0
         self.value = floatValue
+        self.name = name
     }    
     
 }

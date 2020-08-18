@@ -126,7 +126,7 @@ public struct Effect {
                                 let shiftRightValue = value >> 8
                                 switch index {
                                 case 0...5:
-                                    let knob = Knob(withValue: shiftRightValue)
+                                    let knob = Knob(withValue: shiftRightValue, name: index < names.1.count ? names.1[index] : nil)
                                     self.knobs.append(knob)
                                 default:
                                     NSLog("Param: \(param)")
