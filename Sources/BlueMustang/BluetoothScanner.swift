@@ -69,7 +69,9 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
     public override init() {
         super.init()
-        centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
+        centralManager = CBCentralManager(delegate: self,
+                                          queue: DispatchQueue.main,
+                                          options: [CBCentralManagerOptionRestoreIdentifierKey: "BlueMustangCentralManager"])
     }
     
     internal func startScanning(withPeripheralUUID peripheralUUID: UUID?, _ onDiscover: @escaping (Amplifier) -> Void) {
