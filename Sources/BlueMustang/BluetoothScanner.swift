@@ -448,12 +448,12 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         } else {
             ULog.debug("Descriptor: nil")
         }
-        guard let descriptors = descriptor.characteristic.descriptors else { return }
+        guard let descriptors = descriptor.characteristic?.descriptors else { return }
         for desc in descriptors {
             if desc.value == nil { return }
         }
         let char_value: String
-        if let value = descriptor.characteristic.value {
+        if let value = descriptor.characteristic?.value {
             if value.count == 0 {
                 char_value = "[]"
             } else {
@@ -475,7 +475,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                 return "nil"
             }
         }.joined(separator: ". ")
-        ULog.debug("%@ - %@: %@", descriptor.characteristic.uuid, descs, char_value)
+        ULog.debug("%@ - %@: %@", descriptor.characteristic?.uuid ?? "No UUID", descs, char_value)
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
