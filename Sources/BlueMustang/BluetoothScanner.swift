@@ -386,12 +386,15 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             ULog.error("peripheral didDiscoverCharacteristicsFor service %@. error: %@", service.uuid.uuidString, error?.localizedDescription ?? "Unknown")
             return
         }
-        ULog.verbose("Service %@ has %d characteristics", service.uuid, service.characteristics?.count ?? -1)
-        service.characteristics?.forEach { ( characteristic) in
-            if characteristic.properties.contains(.notify) {
-                peripheral.setNotifyValue(true, for: characteristic)
-            } else if characteristic.properties.contains(.read) {
-                peripheral.readValue(for: characteristic)
+        ULog.verbose("Service %@ has %d characteristics. Wait a while before reading", service.uuid, service.characteristics?.count ?? -1)
+        DispatchQueue.global().async {
+            sleep(4)
+            service.characteristics?.forEach { ( characteristic) in
+                if characteristic.properties.contains(.notify) {
+                    peripheral.setNotifyValue(true, for: characteristic)
+                } else if characteristic.properties.contains(.read) {
+                    peripheral.readValue(for: characteristic)
+                }
             }
         }
         onAmplifierCharacteristicsDiscovered?(peripheral.asAmplifier()) // Note this will happen before the readValue calls have completed
