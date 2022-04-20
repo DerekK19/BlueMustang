@@ -56,6 +56,10 @@ public class BlueMustang {
         NotificationCenter.default.addObserver(self, selector: #selector(reverbChanged), name: .reverbChanged, object: nil)
     }
     
+    public func verboseLogging() {
+        ULog.verboseLogging()
+    }
+    
     public func connect(_ amplifier: Amplifier) {
         scanner.connect(amplifier,
                          onConnect: { amplifier in
