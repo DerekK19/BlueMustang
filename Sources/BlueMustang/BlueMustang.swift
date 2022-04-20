@@ -56,7 +56,7 @@ public class BlueMustang {
         NotificationCenter.default.addObserver(self, selector: #selector(reverbChanged), name: .reverbChanged, object: nil)
     }
     
-    public func verboseLogging() {
+    public final class func verboseLogging() {
         ULog.verboseLogging()
     }
     

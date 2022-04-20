@@ -19,13 +19,13 @@ private let category = "uLogger"
 private let stringFormat: StaticString = "%{public}@"
 
 internal class ULog {
-    static var verboseLogging = false
+    static var _verboseLogging = false
     
     static func setup() {
     }
     
     static func verboseLogging() {
-        verboseLogging = true
+        _verboseLogging = true
     }
 
     static func debug(_ format: StaticString, _ args: CVarArg...) {
@@ -49,7 +49,7 @@ internal class ULog {
     static func verbose(_ format: StaticString, _ args: CVarArg...) {
         let f = format.withUTF8Buffer { String(decoding: $0, as: UTF8.self) }
         let s = String.init(format: f, arguments: args)
-        if verboseLogging {
+        if _verboseLogging {
             os_log(stringFormat, log: .uLogger, type: .debug, s)
         }
     }
