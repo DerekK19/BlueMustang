@@ -58,6 +58,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     private let AMPLIFIER_PRESET_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
     private let AMPLIFIER_CONTROL_CHRC_UUID : CBUUID      = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130005")
 
+    private var queue: DispatchQueue!
     private var centralManager: CBCentralManager!
     private var serviceDiscoveryInProgress = false
 
@@ -69,8 +70,9 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
     public override init() {
         super.init()
+        queue = DispatchQueue(label: "BlueMustangCentralManager")
         centralManager = CBCentralManager(delegate: self,
-                                          queue: DispatchQueue.main,
+                                          queue: queue,
                                           options: [CBCentralManagerOptionRestoreIdentifierKey: "BlueMustangCentralManager"])
     }
     
