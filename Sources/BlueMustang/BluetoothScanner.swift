@@ -364,6 +364,22 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     // MARK: - CBPeripheralDelegate
     
+    public func peripheral(_ peripheral: CBPeripheral, didOpen channel: CBL2CAPChannel?, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didOpen error: %@", error?.localizedDescription ?? "Unknown")
+            return
+        }
+        ULog.verbose("Peripheral diid open")
+    }
+    
+    public func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didReadRSSI error: %@", error?.localizedDescription ?? "Unknown")
+            return
+        }
+        ULog.verbose("Peripheral has %ld RSSI", RSSI.int32Value)
+    }
+    
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if error != nil {
             ULog.error("peripheral didDiscoverServices error: %@", error?.localizedDescription ?? "Unknown")
@@ -411,13 +427,38 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         }
     }
     
-    func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
+    public func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         ULog.verbose("peripheral didModifyServices, %@", invalidatedServices.map { $0.uuid })
         if invalidatedServices.map({ $0.uuid }).contains(AMPLIFIER_SERVICE_UUID) {
             NotificationCenter.default.post(name: .amplifierServiceChanged, object: nil)
         }
     }
     
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverIncludedServicesFor service: CBService, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didDiscoverIncludedServicesFor error: %@", error?.localizedDescription ?? "Unknown")
+            return
+        }
+        ULog.verbose("Peripheral has included services for service")
+
+    }
+    
+    public func peripheralDidUpdateName(_ peripheral: CBPeripheral) {
+        ULog.verbose("peripheralDidUpdateName")
+    }
+    
+    public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
+        ULog.verbose("peripheralIsReady toSendWriteWithoutResponse")
+    }
+
+    public func peripheral(_ peripheral: CBPeripheral, didWriteValueFor descriptor: CBDescriptor, error: Error?) {
+        if error != nil {
+            ULog.error("peripheral didWriteValueFor descriptor %@: error: %@", descriptor.uuid.uuidString, error?.localizedDescription ?? "Unknown")
+            return
+        }
+        ULog.verbose("Descriptor %@ did Write", descriptor.uuid)
+    }
+
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if error != nil {
             ULog.error("peripheral didUpdateValueFor characteristic %@. error: %@", characteristic.uuid.uuidString, error?.localizedDescription ?? "Unknown")
@@ -499,4 +540,5 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             peripheral.readValue(for: characteristic)
         }
     }
+    
 }
