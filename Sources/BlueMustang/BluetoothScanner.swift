@@ -97,6 +97,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         self.onAmplifierServicesDiscovered = onServices
         self.onAmplifierCharacteristicsDiscovered = onCharacteristics
         serviceDiscoveryInProgress = false
+        amplifier.peripheral.delegate = self
         centralManager.connect(amplifier.peripheral, options: nil)
     }
     
@@ -321,8 +322,10 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         centralManager.cancelPeripheralConnection(amplifier.peripheral)
     }
     
+    // ============================================================================================
     // MARK: - CBCentralManagerDelegate
-    
+    // ============================================================================================
+
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
@@ -331,7 +334,9 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             NotificationCenter.default.post(name: .readyToScan, object: false)
             central.stopScan()
         case .unsupported: fatalError("Unsupported BLE module")
-        default: break
+        default:
+            ULog.verbose("centralManagerDidUpdateState unhandled")
+            break
         }
     }
     
@@ -362,7 +367,9 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         ULog.debug("centralManager willRestoreState %@", dict)
     }
     
+    // ============================================================================================
     // MARK: - CBPeripheralDelegate
+    // ============================================================================================
     
     public func peripheral(_ peripheral: CBPeripheral, didOpen channel: CBL2CAPChannel?, error: Error?) {
         if error != nil {
