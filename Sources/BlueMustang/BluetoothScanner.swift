@@ -331,22 +331,33 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
+            ULog.verbose("centralManagerDidUpdateState poweredOn")
             NotificationCenter.default.post(name: .readyToScan, object: true)
         case .poweredOff:
+            ULog.verbose("centralManagerDidUpdateState poweredOff")
             NotificationCenter.default.post(name: .readyToScan, object: false)
             central.stopScan()
-        case .unsupported: fatalError("Unsupported BLE module")
+        case .resetting:
+            ULog.verbose("centralManagerDidUpdateState resetting")
+        case .unauthorized:
+            ULog.verbose("centralManagerDidUpdateState unauthorized")
+        case .unsupported:
+            ULog.verbose("centralManagerDidUpdateState unsupported")
+            fatalError("Unsupported BLE module")
+        case .unknown:
+            ULog.verbose("centralManagerDidUpdateState unknown")
         default:
             ULog.verbose("centralManagerDidUpdateState unhandled")
-            break
         }
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        ULog.verbose("centralManager discove4red peripheral")
         self.onAmplifierDiscovered?(peripheral.asAmplifier(advertisementData: advertisementData, rssi: RSSI.intValue))
     }
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        ULog.verbose("centralManager didConnect")
         peripheral.delegate = self
         if self.serviceDiscoveryInProgress { return }
         if peripheral.services != nil {
@@ -358,6 +369,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         onAmplifierConnected?(peripheral.asAmplifier())
     }
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        ULog.verbose("centralManager didDisconnectPeripheral")
         onAmplifierDisconnected?(peripheral.asAmplifier())
     }
     
