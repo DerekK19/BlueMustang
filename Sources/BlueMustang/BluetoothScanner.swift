@@ -369,12 +369,16 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         onAmplifierConnected?(peripheral.asAmplifier())
     }
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        if error != nil {
+            ULog.error("centralManager didDisconnectPeripheral: %@", error?.localizedDescription ?? "Unknown")
+            return
+        }
         ULog.verbose("centralManager didDisconnectPeripheral")
         onAmplifierDisconnected?(peripheral.asAmplifier())
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        ULog.debug("centralManager didFailToConnect %@", error?.localizedDescription ?? "Unknown Reason")
+        ULog.error("centralManager didFailToConnect %@", error?.localizedDescription ?? "Unknown Reason")
     }
     
     func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
