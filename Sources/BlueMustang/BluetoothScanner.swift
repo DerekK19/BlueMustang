@@ -343,7 +343,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             ULog.verbose("centralManagerDidUpdateState unauthorized")
         case .unsupported:
             ULog.verbose("centralManagerDidUpdateState unsupported")
-            fatalError("Unsupported BLE module")
+//            fatalError("Unsupported BLE module")
         case .unknown:
             ULog.verbose("centralManagerDidUpdateState unknown")
         default:
