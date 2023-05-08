@@ -11,6 +11,8 @@ public protocol BlueMustangDelegate {
     func blueMustangIsReadyToScan(_ blueMustang: BlueMustang)
     func blueMustang(_ blueMustang: BlueMustang, didFindAmplifier amplifier: Amplifier)
     func blueMustang(_ blueMustang: BlueMustang, didConnectAmplifier amplifier: Amplifier)
+    func blueMustang(_ blueMustang: BlueMustang, didDiscoverServices amplifier: Amplifier)
+    func blueMustang(_ blueMustang: BlueMustang, didDiscoverCharacteristics amplifier: Amplifier)
     func blueMustang(_ blueMustang: BlueMustang, didDisconnectAmplifier amplifier: Amplifier?)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverAmplifierName name: String)
     func blueMustang(_ blueMustang: BlueMustang, didDiscoverPresetCount count: Int)
@@ -62,16 +64,21 @@ public class BlueMustang {
     
     public func connect(_ amplifier: Amplifier) {
         scanner.connect(amplifier,
-                         onConnect: { amplifier in
+                        onConnect: { amplifier in
                             ULog.verbose("Amplifier connected")
-                         },
-                         onServices: { amplifier in
-                            ULog.verbose("Found Services")
-                         },
-                         onCharacteristics: { amplifier in
-                            ULog.verbose("Found Characteristics")
                             self.delegate.blueMustang(self, didConnectAmplifier: amplifier)
-        })
+                        },
+                        onServices: { amplifier in
+                            ULog.verbose("Found Services")
+                            self.delegate.blueMustang(self, didDiscoverServices: amplifier)
+                        },
+                        onCharacteristics: { amplifier in
+                            ULog.verbose("Found Characteristics")
+                            self.delegate.blueMustang(self, didDiscoverCharacteristics: amplifier)
+                        },
+                        onDisconnect: { amplifier in
+                            self.delegate.blueMustang(self, didDisconnectAmplifier: amplifier)
+                        })
     }
     
     public func disconnect(_ amplifier: Amplifier) {

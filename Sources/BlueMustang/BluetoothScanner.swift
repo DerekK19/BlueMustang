@@ -58,6 +58,8 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     private let AMPLIFIER_PRESET_CHRC_UUID: CBUUID        = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130004")
     private let AMPLIFIER_CONTROL_CHRC_UUID : CBUUID      = CBUUID(string: "abc9a576-c710-11ea-87d0-0242ac130005")
 
+    private let AMPLIFIER_CHRC_UUIDS : [CBUUID]
+    
     private var queue: DispatchQueue!
     private var centralManager: CBCentralManager!
     private var serviceDiscoveryInProgress = false
@@ -69,8 +71,9 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     private var onAmplifierDisconnected: ((Amplifier) -> Void)?
 
     public override init() {
+        AMPLIFIER_CHRC_UUIDS = [AMPLIFIER_NAME_CHRC_UUID, AMPLIFIER_PRESET_COUNT_CHRC_UUID, AMPLIFIER_PRESET_NAMES_CHRC_UUID, AMPLIFIER_PRESET_CHRC_UUID, AMPLIFIER_CONTROL_CHRC_UUID]
         super.init()
-        queue = DispatchQueue(label: "BlueMustangCentralManager")
+        queue = DispatchQueue(label: "BlueMustangCentralManager", qos: .utility)
         centralManager = CBCentralManager(delegate: self,
                                           queue: queue,
                                           options: [CBCentralManagerOptionRestoreIdentifierKey: "BlueMustangCentralManager"])
@@ -94,10 +97,13 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         }
     }
     
-    internal func connect(_ amplifier: Amplifier, onConnect: @escaping (Amplifier) -> Void, onServices: @escaping (Amplifier) -> Void, onCharacteristics: @escaping (Amplifier) -> Void) {
+    internal func connect(_ amplifier: Amplifier, onConnect: @escaping (Amplifier) -> Void, onServices: @escaping (Amplifier) -> Void, onCharacteristics: @escaping (Amplifier) -> Void, onDisconnect: @escaping (Amplifier) -> Void) {
+        ULog.verbose("connect")
+        centralManager.stopScan()
         self.onAmplifierConnected = onConnect
         self.onAmplifierServicesDiscovered = onServices
         self.onAmplifierCharacteristicsDiscovered = onCharacteristics
+        self.onAmplifierDisconnected = onDisconnect
         serviceDiscoveryInProgress = false
         amplifier.peripheral.delegate = self
         centralManager.connect(amplifier.peripheral, options: nil)
@@ -352,7 +358,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        ULog.verbose("centralManager discove4red peripheral")
+        ULog.verbose("centralManager discovered peripheral")
         self.onAmplifierDiscovered?(peripheral.asAmplifier(advertisementData: advertisementData, rssi: RSSI.intValue))
     }
     
@@ -364,16 +370,19 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             self.peripheral(peripheral, didDiscoverServices: nil) //already discovered services before, DO NOT do it again
         } else {
             serviceDiscoveryInProgress = true
+            ULog.verbose("Will discoverServices")
             peripheral.discoverServices([AMPLIFIER_SERVICE_UUID])
         }
         onAmplifierConnected?(peripheral.asAmplifier())
+        ULog.verbose("didConnect returned")
     }
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         if error != nil {
             ULog.error("centralManager didDisconnectPeripheral: %@", error?.localizedDescription ?? "Unknown")
-            return
+//            return
+        } else {
+            ULog.verbose("centralManager didDisconnectPeripheral")
         }
-        ULog.verbose("centralManager didDisconnectPeripheral")
         onAmplifierDisconnected?(peripheral.asAmplifier())
     }
     
@@ -394,7 +403,7 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             ULog.error("peripheral didOpen error: %@", error?.localizedDescription ?? "Unknown")
             return
         }
-        ULog.verbose("Peripheral diid open")
+        ULog.verbose("Peripheral did open")
     }
     
     public func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
@@ -417,7 +426,8 @@ class BluetoothScanner: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             if service.characteristics != nil {
                 self.peripheral(peripheral, didDiscoverCharacteristicsFor: service, error: nil) //already discovered characteristics before, DO NOT do it again
             } else {
-                peripheral.discoverCharacteristics(nil, for: service)
+                ULog.verbose("Discover characteristics for service %@", service.uuid.uuidString)
+                peripheral.discoverCharacteristics(AMPLIFIER_CHRC_UUIDS, for: service)
             }
         }
     }
